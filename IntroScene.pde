@@ -12,7 +12,7 @@ class IntroScene extends Scene {
   IntroScene() {
     yuriFox = new Sprite("yurifox.png", 32, 32);
     yuriFox.scale = 2;
-    yuriFox.x = width * .5 - yuriFox.width * .5 * yuriFox.scale;
+    yuriFox.x = width - yuriFox.width * .5 * yuriFox.scale;
     yuriFox.y = height * .75;
     
     yuriFox.setFPS(12);
@@ -23,8 +23,16 @@ class IntroScene extends Scene {
     
     picture = new Sprite("10997265356_0f8e16452f_q.jpg");
     picture.scale = 1;
-    picture.x = width * .5 - picture.width * .5 * picture.scale;
+    picture.x = width - picture.width * .5 * picture.scale;
     picture.y = yuriFox.y - picture.height * picture.scale + 10;
+
+    Sprite yuriFinal = yuriFox.copy();
+    yuriFinal.x = 0 - picture.width * .5 *picture.scale - yuriFox.width * .5 * yuriFox.scale;
+    Sprite pictureFinal = picture.copy();
+    pictureFinal.x = 0 - picture.width * picture.scale;
+
+    yuriFox.animate(yuriFinal, 15000);
+    picture.animate(pictureFinal, 15000);
   }
   
   Scene update() {

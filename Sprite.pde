@@ -25,6 +25,14 @@ class Sprite {
   ArrayList animation;
   int currentFrame;
 
+  Sprite transformation;
+  Sprite transformationOrigin;
+  float transformationSpeed;
+  float transformationTime0;
+
+  Sprite() {
+  }
+
   Sprite(String filename) {
     initAnimation();
     spriteSheet = loadImage(filename);
@@ -34,6 +42,20 @@ class Sprite {
     tiles = new PImage[1][1];
     tiles[0][0] = spriteSheet;
     addFrame(0, 0);
+  }
+
+  Sprite copy(){
+    Sprite copy = new Sprite();
+    copy.x = this.x;
+    copy.y = this.y;
+    return copy;
+  }
+
+  void animate(Sprite target, float speed) {
+    transformationOrigin = copy();
+    transformation = target;
+    transformationTime0 = millis();
+    transformationSpeed = speed + transformationTime0;
   }
 
   void setFPS(float FPS) {
@@ -74,10 +96,16 @@ class Sprite {
   }
 
   void update() {
+    float t = millis();
     if (animation.size() > 1) {
-      if (millis() - time0 >= frameTime) {
-        time0 = millis();
+      if (t - time0 >= frameTime) {
+        time0 = t;
         currentFrame = ++currentFrame == animation.size() ? 0 : currentFrame;
+      }
+    }
+    if (transformation != null) {
+      if (t < transformationSpeed) {
+        x = map(t, transformationTime0, transformationSpeed, transformationOrigin.x, transformation.x);
       }
     }
   }
