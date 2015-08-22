@@ -19,7 +19,7 @@ Scene currentScene;
 
 void setup() {
   size(800, 600);
-  currentScene = new GameScene();
+  currentScene = new IntroScene();
 }
 
 void draw() {
