@@ -11,21 +11,30 @@ class IntroScene extends Scene {
   
   IntroScene() {
     yuriFox = new Sprite("yurifox.png", 32, 32);
-    yuriFox.scale = 2.5;
+    yuriFox.scale = 2;
     yuriFox.x = width * .5 - yuriFox.width * .5 * yuriFox.scale;
-    yuriFox.y = height * .5;
+    yuriFox.y = height * .75;
+    
+    yuriFox.setFPS(12);
+    yuriFox.addFrame(0, 0);
+    yuriFox.addFrame(0, 1);
+    yuriFox.addFrame(0, 2);
+    yuriFox.addFrame(0, 3);
     
     picture = new Sprite("10997265356_0f8e16452f_q.jpg");
-    picture.scale = 2;
+    picture.scale = 1;
     picture.x = width * .5 - picture.width * .5 * picture.scale;
-    picture.y = yuriFox.y - picture.height * picture.scale;
+    picture.y = yuriFox.y - picture.height * picture.scale + 10;
   }
   
   Scene update() {
+    picture.update();
+    yuriFox.update();
     return this;
   }
   
   void draw() {    
+    background(200);
     picture.draw();
     yuriFox.draw();
   }

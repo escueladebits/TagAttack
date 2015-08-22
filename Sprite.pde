@@ -10,21 +10,53 @@ class Sprite {
   PImage[][] tiles;
   int width, height;
   int frameI, frameJ;
-  
+
   float x, y;
   float scale;
+
+  float FPS;
+  float time0;
+  float frameTime;
   
+  class Frame {
+    int i, j;
+  }
+
+  ArrayList animation;
+  int currentFrame;
+
   Sprite(String filename) {
+    initAnimation();
     spriteSheet = loadImage(filename);
     this.width = spriteSheet.width;
     this.height = spriteSheet.height;
     
     tiles = new PImage[1][1];
     tiles[0][0] = spriteSheet;
-    frameI = frameJ = 0;
+    addFrame(0, 0);
+  }
+
+  void setFPS(float FPS) {
+    this.FPS = FPS;
+    frameTime = 1000 / FPS;
+    time0 = millis();
+  }
+
+  void addFrame(int i, int j) {
+    Frame f = new Frame();
+    f.i = i;
+    f.j = j;
+    animation.add(f);
+  }
+
+  void initAnimation() {
+    animation = new ArrayList();
+    currentFrame = 0;
+    this.setFPS(1);
   }
   
   Sprite (String filename, int width, int height) {
+    initAnimation();
     spriteSheet = loadImage(filename);
     this.width = width;
     this.height = height;
@@ -39,12 +71,21 @@ class Sprite {
         tiles[row][column].copy(spriteSheet, column * this.width, row * this.height, this.width, this.height, 0, 0, this.width, this.height);            
       }
     }    
-    frameI = frameJ = 0;
+  }
+
+  void update() {
+    if (animation.size() > 1) {
+      if (millis() - time0 >= frameTime) {
+        time0 = millis();
+        currentFrame = ++currentFrame == animation.size() ? 0 : currentFrame;
+      }
+    }
   }
   
   void draw() {
     imageMode(CORNER);
-    image(tiles[frameI][frameJ], x, y, this.width * scale, this.height * scale);
+    Frame f = (Frame)animation.get(currentFrame);
+    image(tiles[f.i][f.j], x, y, this.width * scale, this.height * scale);
   }
 }
 
