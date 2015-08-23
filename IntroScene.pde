@@ -21,29 +21,59 @@ class IntroScene extends Scene {
 
   IntroScene(TagAttack app, Scene nextScene) {
     super(app);
-    arcadeFont = loadFont("04b03-48.vlw");
-    introMusic = new SoundFile(app, "Ozzed_-_Satisfucktion.mp3");
+    loadItems();
+
     this.nextScene = nextScene;
     exit = false;
 
+    setupYuriFox();
+    setupPicture();
+
+    startScene();
+  }
+
+  private void loadItems() {
+    arcadeFont = loadFont("04b03-48.vlw");
+    introMusic = new SoundFile(app, "Ozzed_-_Satisfucktion.mp3");
     yuriFox = new Sprite("yurifox.png", 32, 32);
+    picture = new Sprite("10997265356_0f8e16452f_q.jpg");
+  }
+
+  private void setupYuriFox() {
     yuriFox.scale = 2;
     yuriFox.x = width - yuriFox.width * .5 * yuriFox.scale;
     yuriFox.y = height * .75;
 
     yuriFox.setFPS(12);
-    loadYuriAnimation(framesYuriLeft);
+    setupYuriAnimation(framesYuriLeft);
+  }
 
-    picture = new Sprite("10997265356_0f8e16452f_q.jpg");
+  void setupYuriAnimation(int[] set) {
+    for (int i = 0; i < set.length; i++) {
+      yuriFox.addFrame(0, set[i]);
+    }
+  }
+
+  private void setupPicture() {
     picture.scale = 1;
     picture.x = width - picture.width * .5 * picture.scale;
     picture.y = yuriFox.y - picture.height * picture.scale + 10;
+  }
 
+  private void startScene() {
     moveLeft();
     introMusic.play();
   }
 
-  void moveX (float destiny, int delta, float time) {
+  private void moveLeft() {
+    moveX(0, -1, 5000);
+  }
+
+  private void moveRight() {
+    moveX(width + picture.width, 1, 5000);
+  }
+
+  private void moveX (float destiny, int delta, float time) {
     Sprite yuriFinal = yuriFox.copy();
     yuriFinal.x = destiny - picture.width * .5 * picture.scale - yuriFox.width * .5 * yuriFox.scale;
     Sprite pictureFinal = picture.copy();
@@ -51,33 +81,6 @@ class IntroScene extends Scene {
 
     yuriFox.animate(yuriFinal, time);
     picture.animate(pictureFinal, time);
-  }
-
-  void moveLeft() {
-    moveX(0, -1, 5000);
-  }
-
-  void moveRight() {
-    moveX(width + picture.width, 1, 5000);
-  }
-
-  void loadYuriAnimation(int[] set) {
-    for (int i = 0; i < set.length; i++) {
-      yuriFox.addFrame(0, set[i]);
-    }
-  }
-
-  void flipYuriFox() {
-    Frame f = (Frame)yuriFox.animation.get(yuriFox.currentFrame);
-    yuriFox.cleanAnimation();
-    int[] framesSet;
-    if (f.j < 4) {
-      framesSet = framesYuriRight;
-    }
-    else {
-      framesSet = framesYuriLeft;
-    }
-   loadYuriAnimation(framesSet);
   }
 
   Scene update() {
@@ -102,14 +105,17 @@ class IntroScene extends Scene {
     }
   }
   
-  void displayTitle() {
-    textFont(arcadeFont);
-    textSize(32);
-    String subTitle = "Escuela de Bits presents";
-    text(subTitle, width * .25, height * .15);
-    textSize(80);
-    String title = "Tag Attack";
-    text(title, width * .25, height * .33);
+  private void flipYuriFox() {
+    Frame f = (Frame)yuriFox.animation.get(yuriFox.currentFrame);
+    yuriFox.cleanAnimation();
+    int[] framesSet;
+    if (f.j < 4) {
+      framesSet = framesYuriRight;
+    }
+    else {
+      framesSet = framesYuriLeft;
+    }
+   setupYuriAnimation(framesSet);
   }
 
   void draw() {
@@ -118,6 +124,16 @@ class IntroScene extends Scene {
     displayTitle();
     picture.draw();
     yuriFox.draw();
+  }
+
+  private void displayTitle() {
+    textFont(arcadeFont);
+    textSize(32);
+    String subTitle = "Escuela de Bits presents";
+    text(subTitle, width * .25, height * .15);
+    textSize(80);
+    String title = "Tag Attack";
+    text(title, width * .25, height * .33);
   }
 
   void keyPressed() {

@@ -5,7 +5,7 @@
 */
 
 abstract class Scene {
-  private TagAttack app;
+  protected TagAttack app;
 
   Scene (TagAttack app) {
     this.app = app;
