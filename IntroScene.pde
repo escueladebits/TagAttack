@@ -96,7 +96,7 @@ class IntroScene extends Scene {
   }
 
   void draw() {
-    background(200);
+    background(240,208,176);
 
     displayTitle();
     picture.draw();
