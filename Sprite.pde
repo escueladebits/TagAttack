@@ -3,6 +3,9 @@
   
   See License info at the end of the file.
 */
+class Frame {
+  int i, j;
+}
 
 class Sprite {
   
@@ -17,10 +20,6 @@ class Sprite {
   float FPS;
   float time0;
   float frameTime;
-  
-  class Frame {
-    int i, j;
-  }
 
   ArrayList animation;
   int currentFrame;
@@ -71,6 +70,10 @@ class Sprite {
     animation.add(f);
   }
 
+  void cleanAnimation() {
+    animation = new ArrayList();
+  }
+
   void initAnimation() {
     animation = new ArrayList();
     currentFrame = 0;
@@ -109,7 +112,7 @@ class Sprite {
       }
     }
   }
-  
+
   void draw() {
     imageMode(CORNER);
     Frame f = (Frame)animation.get(currentFrame);
