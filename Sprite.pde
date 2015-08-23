@@ -124,6 +124,12 @@ class Sprite {
         y = map(t, transformationTime0, transformationSpeed, transformationOrigin.y, transformation.y);
         scale = map(t, transformationTime0, transformationSpeed, transformationOrigin.scale, transformation.scale);
       }
+      else {
+        x = transformation.x;
+        y = transformation.y;
+        scale = transformation.scale;
+        transformation = null;
+      }
     }
   }
 
