@@ -13,6 +13,9 @@ abstract class Scene {
   abstract Scene update();
   
   abstract void draw();
+
+  void keyPressed() {
+  }
 }
 
 /*

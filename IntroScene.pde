@@ -16,10 +16,15 @@ class IntroScene extends Scene {
   int[] framesYuriLeft = {0, 1, 2, 3},
         framesYuriRight = {4, 5, 6, 7};
 
-  IntroScene(TagAttack app) {
+  Scene nextScene;
+  boolean exit;
+
+  IntroScene(TagAttack app, Scene nextScene) {
     super(app);
     arcadeFont = loadFont("04b03-48.vlw");
     introMusic = new SoundFile(app, "Ozzed_-_Satisfucktion.mp3");
+    this.nextScene = nextScene;
+    exit = false;
 
     yuriFox = new Sprite("yurifox.png", 32, 32);
     yuriFox.scale = 2;
@@ -87,7 +92,14 @@ class IntroScene extends Scene {
       flipYuriFox();
       moveLeft();
     }
-    return this;
+    if (!exit) {
+      return this;
+    }
+    else {
+      exit = false;
+      introMusic.stop();
+      return nextScene;
+    }
   }
   
   void displayTitle() {
@@ -106,6 +118,10 @@ class IntroScene extends Scene {
     displayTitle();
     picture.draw();
     yuriFox.draw();
+  }
+
+  void keyPressed() {
+    exit = true;
   }
 }
 

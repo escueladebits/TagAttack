@@ -18,6 +18,7 @@ class GameScene extends Scene {
   }
   
   void draw() {
+    background(200);
     imageMode(CENTER);
     image(img, width * .5, height * .5, img.width * 2, img.height * 2);
   }

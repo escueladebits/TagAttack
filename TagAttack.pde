@@ -17,14 +17,20 @@ import processing.sound.*;
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-Scene currentScene;
+Scene currentScene, introScene, gameScene;
 
 void setup() {
   size(800, 600);
-  currentScene = new IntroScene(this);
+  gameScene = new GameScene(this);
+  introScene = new IntroScene(this, gameScene);
+  currentScene = introScene;
 }
 
 void draw() {
   currentScene = currentScene.update();
   currentScene.draw();
+}
+
+void keyPressed() {
+  currentScene.keyPressed();
 }
