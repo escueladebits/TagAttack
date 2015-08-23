@@ -19,6 +19,8 @@ class IntroScene extends Scene {
   Scene nextScene;
   boolean exit;
 
+  BlinkerText blinker;
+
   IntroScene(TagAttack app, Scene nextScene) {
     super(app);
     loadItems();
@@ -28,6 +30,8 @@ class IntroScene extends Scene {
 
     setupYuriFox();
     setupPicture();
+
+    blinker = createBlinker();
 
     startScene();
   }
@@ -58,6 +62,15 @@ class IntroScene extends Scene {
     picture.scale = 1;
     picture.x = width - picture.width * .5 * picture.scale;
     picture.y = yuriFox.y - picture.height * picture.scale + 10;
+  }
+
+  private BlinkerText createBlinker() {
+    BlinkerText b = new BlinkerText(3);
+    b.text = "Press <START>";
+    b.x = width * .32;
+    b.y = height * .47;
+    b.size = 40;
+    return b;
   }
 
   private void startScene() {
@@ -122,18 +135,25 @@ class IntroScene extends Scene {
     background(240,208,176);
 
     displayTitle();
+    blinker.draw();
+    //blinker.apply(3);
+    displayFooter();
     picture.draw();
     yuriFox.draw();
   }
 
   private void displayTitle() {
     textFont(arcadeFont);
-    textSize(32);
-    String subTitle = "Escuela de Bits presents";
-    text(subTitle, width * .25, height * .15);
-    textSize(80);
+    textSize(125);
     String title = "Tag Attack";
-    text(title, width * .25, height * .33);
+    text(title, width * .10, height * .283);
+  }
+
+  private void displayFooter() {
+    textFont(arcadeFont);
+    textSize(20);
+    String footer = "Copyright 2015 Escuela de Bits, GPL Licensed";
+    text(footer, width * .44, height * .97);
   }
 
   void keyPressed() {
