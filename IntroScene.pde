@@ -28,8 +28,6 @@ class IntroScene extends Scene {
     yuriFox.setupPicture("10997265356_0f8e16452f_q.jpg");
 
     blinker = createBlinker();
-
-    startScene();
   }
 
   private void loadItems() {
@@ -50,6 +48,14 @@ class IntroScene extends Scene {
     yuriFox.moveLeft();
     introMusic.play();
   }
+
+  void start() {
+    startScene();
+  }
+
+  void stop() {
+   introMusic.stop();
+  };
 
   Scene update() {
     yuriFox.update();

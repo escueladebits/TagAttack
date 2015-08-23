@@ -12,6 +12,10 @@ abstract class Scene {
   }
   abstract Scene update();
   
+  abstract void start();
+
+  abstract void stop();
+
   abstract void draw();
 
   void keyPressed() {

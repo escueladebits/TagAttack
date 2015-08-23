@@ -8,6 +8,7 @@ class GameScene extends Scene {
   
   Sprite img;
   TagCanvas[] canvases;
+  SoundFile music;
   
   GameScene(TagAttack app) {
     super(app);
@@ -31,6 +32,15 @@ class GameScene extends Scene {
     img.y = height * .5 - img.height * img.scale * .5;
   }
   
+  void start() {
+    music = new SoundFile(app, "Ozzed_-_8-bit_Party.mp3");
+    music.play();
+  }
+
+  void stop() {
+    music.stop();
+  }
+
   Scene update() {
     for (int i = 0; i < canvases.length; i++) {
       canvases[i].update();

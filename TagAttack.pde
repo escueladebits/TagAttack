@@ -24,9 +24,16 @@ void setup() {
   gameScene = new GameScene(this);
   introScene = new IntroScene(this, gameScene);
   currentScene = introScene;
+  currentScene.start();
 }
 
 void draw() {
+  Scene newScene = currentScene.update();
+  if (newScene != currentScene) {
+    currentScene.stop();
+    currentScene = newScene;
+    currentScene.start();
+  }
   currentScene = currentScene.update();
   currentScene.draw();
 }
