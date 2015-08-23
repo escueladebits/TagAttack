@@ -10,11 +10,7 @@ class IntroScene extends Scene {
 
   PFont arcadeFont;
 
-  Sprite yuriFox,
-         picture;
-
-  int[] framesYuriLeft = {0, 1, 2, 3},
-        framesYuriRight = {4, 5, 6, 7};
+  LibrarianSprite yuriFox;
 
   Scene nextScene;
   boolean exit;
@@ -28,8 +24,8 @@ class IntroScene extends Scene {
     this.nextScene = nextScene;
     exit = false;
 
-    setupYuriFox();
-    setupPicture();
+    yuriFox = new LibrarianSprite("yurifox.png", width, height);
+    yuriFox.setupPicture("10997265356_0f8e16452f_q.jpg");
 
     blinker = createBlinker();
 
@@ -39,29 +35,6 @@ class IntroScene extends Scene {
   private void loadItems() {
     arcadeFont = loadFont("04b03-48.vlw");
     introMusic = new SoundFile(app, "Ozzed_-_Satisfucktion.mp3");
-    yuriFox = new Sprite("yurifox.png", 32, 32);
-    picture = new Sprite("10997265356_0f8e16452f_q.jpg");
-  }
-
-  private void setupYuriFox() {
-    yuriFox.scale = 2;
-    yuriFox.x = width - yuriFox.width * .5 * yuriFox.scale;
-    yuriFox.y = height * .75;
-
-    yuriFox.setFPS(12);
-    setupYuriAnimation(framesYuriLeft);
-  }
-
-  void setupYuriAnimation(int[] set) {
-    for (int i = 0; i < set.length; i++) {
-      yuriFox.addFrame(0, set[i]);
-    }
-  }
-
-  private void setupPicture() {
-    picture.scale = 1;
-    picture.x = width - picture.width * .5 * picture.scale;
-    picture.y = yuriFox.y - picture.height * picture.scale + 10;
   }
 
   private BlinkerText createBlinker() {
@@ -74,40 +47,13 @@ class IntroScene extends Scene {
   }
 
   private void startScene() {
-    moveLeft();
+    yuriFox.moveLeft();
     introMusic.play();
   }
 
-  private void moveLeft() {
-    moveX(0, -1, 5000);
-  }
-
-  private void moveRight() {
-    moveX(width + picture.width, 1, 5000);
-  }
-
-  private void moveX (float destiny, int delta, float time) {
-    Sprite yuriFinal = yuriFox.copy();
-    yuriFinal.x = destiny - picture.width * .5 * picture.scale - yuriFox.width * .5 * yuriFox.scale;
-    Sprite pictureFinal = picture.copy();
-    pictureFinal.x = destiny - picture.width * picture.scale;
-
-    yuriFox.animate(yuriFinal, time);
-    picture.animate(pictureFinal, time);
-  }
-
   Scene update() {
-    picture.update();
     yuriFox.update();
 
-    if (yuriFox.x <= 0) {
-      flipYuriFox();
-      moveRight();
-    }
-    if (yuriFox.x + yuriFox.width * yuriFox.scale * .5 >= width) {
-      flipYuriFox();
-      moveLeft();
-    }
     if (!exit) {
       return this;
     }
@@ -117,28 +63,13 @@ class IntroScene extends Scene {
       return nextScene;
     }
   }
-  
-  private void flipYuriFox() {
-    Frame f = (Frame)yuriFox.animation.get(yuriFox.currentFrame);
-    yuriFox.cleanAnimation();
-    int[] framesSet;
-    if (f.j < 4) {
-      framesSet = framesYuriRight;
-    }
-    else {
-      framesSet = framesYuriLeft;
-    }
-   setupYuriAnimation(framesSet);
-  }
 
   void draw() {
     background(240,208,176);
 
     displayTitle();
     blinker.draw();
-    //blinker.apply(3);
     displayFooter();
-    picture.draw();
     yuriFox.draw();
   }
 
