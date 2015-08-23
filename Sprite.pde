@@ -43,6 +43,33 @@ class Sprite {
     addFrame(0, 0);
   }
 
+  private void initAnimation() {
+    animation = new ArrayList();
+    currentFrame = 0;
+    this.setFPS(1);
+  }
+
+  Sprite (String filename, int width, int height) {
+    initAnimation();
+    spriteSheet = loadImage(filename);
+    this.width = width;
+    this.height = height;
+
+    breakSpriteSheetInTiles();
+  }
+
+  private void breakSpriteSheetInTiles() {
+    int sheetRows = spriteSheet.height / this.height;
+    int sheetColumns = spriteSheet.width / this.width;
+    tiles = new PImage[sheetRows][sheetColumns];
+    for (int row = 0; row < sheetRows; row++) {
+      for (int column = 0; column < sheetColumns; column++) {
+        tiles[row][column] = createImage(this.width, this.height, ARGB);
+        tiles[row][column].copy(spriteSheet, column * this.width, row * this.height, this.width, this.height, 0, 0, this.width, this.height);            
+      }
+    }
+  }
+
   Sprite copy(){
     Sprite copy = new Sprite();
     copy.x = this.x;
@@ -74,38 +101,22 @@ class Sprite {
     animation = new ArrayList();
   }
 
-  void initAnimation() {
-    animation = new ArrayList();
-    currentFrame = 0;
-    this.setFPS(1);
-  }
-  
-  Sprite (String filename, int width, int height) {
-    initAnimation();
-    spriteSheet = loadImage(filename);
-    this.width = width;
-    this.height = height;
-
-    int sheetRows = spriteSheet.height / this.height;
-    int sheetColumns = spriteSheet.width / this.width;
-    tiles = new PImage[sheetRows][sheetColumns];
-    spriteSheet.loadPixels();
-    for (int row = 0; row < sheetRows; row++) {
-      for (int column = 0; column < sheetColumns; column++) {
-        tiles[row][column] = createImage(this.width, this.height, ARGB);
-        tiles[row][column].copy(spriteSheet, column * this.width, row * this.height, this.width, this.height, 0, 0, this.width, this.height);            
-      }
-    }    
-  }
-
   void update() {
     float t = millis();
+    processAnimation(t);
+    processTransformation(t);
+  }
+
+  private void processAnimation(float t) {
     if (animation.size() > 1) {
       if (t - time0 >= frameTime) {
         time0 = t;
         currentFrame = ++currentFrame == animation.size() ? 0 : currentFrame;
       }
     }
+  }
+
+  private void processTransformation(float t) {
     if (transformation != null) {
       if (t < transformationSpeed) {
         x = map(t, transformationTime0, transformationSpeed, transformationOrigin.x, transformation.x);
