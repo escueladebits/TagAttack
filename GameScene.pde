@@ -8,7 +8,8 @@ class GameScene extends Scene {
   
   PImage img;
   
-  GameScene() {
+  GameScene(TagAttack app) {
+    super(app);
     img = loadImage("10997265356_0f8e16452f_q.jpg");
   }
   

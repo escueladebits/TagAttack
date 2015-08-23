@@ -5,6 +5,11 @@
 */
 
 abstract class Scene {
+  private TagAttack app;
+
+  Scene (TagAttack app) {
+    this.app = app;
+  }
   abstract Scene update();
   
   abstract void draw();

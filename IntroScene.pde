@@ -4,6 +4,8 @@
   See License info at the end of the file.
 */
 
+SoundFile introMusic;
+
 class IntroScene extends Scene {
 
   PFont arcadeFont;
@@ -14,8 +16,10 @@ class IntroScene extends Scene {
   int[] framesYuriLeft = {0, 1, 2, 3},
         framesYuriRight = {4, 5, 6, 7};
 
-  IntroScene() {
+  IntroScene(TagAttack app) {
+    super(app);
     arcadeFont = loadFont("04b03-48.vlw");
+    introMusic = new SoundFile(app, "Ozzed_-_Satisfucktion.mp3");
 
     yuriFox = new Sprite("yurifox.png", 32, 32);
     yuriFox.scale = 2;
@@ -31,6 +35,7 @@ class IntroScene extends Scene {
     picture.y = yuriFox.y - picture.height * picture.scale + 10;
 
     moveLeft();
+    introMusic.play();
   }
 
   void moveX (float destiny, int delta, float time) {

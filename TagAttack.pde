@@ -1,3 +1,5 @@
+import processing.sound.*;
+
 /*
   Copyright 2015 Antonio Jesús Sánchez Padial
   
@@ -19,7 +21,7 @@ Scene currentScene;
 
 void setup() {
   size(800, 600);
-  currentScene = new IntroScene();
+  currentScene = new IntroScene(this);
 }
 
 void draw() {
