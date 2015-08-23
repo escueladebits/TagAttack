@@ -6,21 +6,50 @@
 
 class GameScene extends Scene {
   
-  PImage img;
+  Sprite img;
+  TagCanvas[] canvases;
   
   GameScene(TagAttack app) {
     super(app);
-    img = loadImage("10997265356_0f8e16452f_q.jpg");
+    img = new Sprite("10997265356_0f8e16452f_q.jpg");
+    PFont arcadeFont = loadFont("04b03-48.vlw");
+    float wide = .17 * width;
+
+    setPicture();
+
+    String[] tags = TagManager.access().getNRandomTags(4);
+    canvases = new TagCanvas[4];
+    canvases[0] = new TagCanvas(UP, tags[0], wide, arcadeFont);
+    canvases[1] = new TagCanvas(DOWN, tags[1], wide, arcadeFont);
+    canvases[2] = new TagCanvas(LEFT, tags[2], wide, arcadeFont);
+    canvases[3] = new TagCanvas(RIGHT, tags[3], wide, arcadeFont);
+  }
+  
+  private void setPicture() {
+    img.scale = 2;
+    img.x = width * .5 - img.width * img.scale * .5;
+    img.y = height * .5 - img.height * img.scale * .5;
   }
   
   Scene update() {
+    for (int i = 0; i < canvases.length; i++) {
+      canvases[i].update();
+    }
     return this;
   }
   
   void draw() {
     background(200);
-    imageMode(CENTER);
-    image(img, width * .5, height * .5, img.width * 2, img.height * 2);
+    for (int i = 0; i < canvases.length; i++) {
+      canvases[i].draw();
+    }
+    img.draw();
+  }
+  
+  void keyPressed() {    
+    canvases[0].addImage(img);
+    img = new Sprite("10997290916_57a15cf58d_q.jpg");
+    setPicture();
   }
 }
 

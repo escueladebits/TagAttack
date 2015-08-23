@@ -74,6 +74,7 @@ class Sprite {
     Sprite copy = new Sprite();
     copy.x = this.x;
     copy.y = this.y;
+    copy.scale = this.scale;
     return copy;
   }
 
@@ -120,6 +121,8 @@ class Sprite {
     if (transformation != null) {
       if (t < transformationSpeed) {
         x = map(t, transformationTime0, transformationSpeed, transformationOrigin.x, transformation.x);
+        y = map(t, transformationTime0, transformationSpeed, transformationOrigin.y, transformation.y);
+        scale = map(t, transformationTime0, transformationSpeed, transformationOrigin.scale, transformation.scale);
       }
     }
   }
