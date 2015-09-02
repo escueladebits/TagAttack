@@ -25,6 +25,7 @@ class IntroScene extends Scene {
     exit = false;
 
     yuriFox = new LibrarianSprite("yurifox.png", width, height);
+    yuriFox.setY(.75 * height);
     yuriFox.setupPicture("10997265356_0f8e16452f_q.jpg");
 
     blinker = createBlinker();

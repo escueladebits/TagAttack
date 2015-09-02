@@ -35,6 +35,11 @@ class GameScene extends Scene {
   void start() {
     music = new SoundFile(app, "Ozzed_-_8-bit_Party.mp3");
     music.play();
+    
+    lib = new LibrarianSprite("yurifox.png", width, height);
+    lib.setY(width * .47);
+    lib.setupPicture("10997265356_0f8e16452f_q.jpg", 1.5);
+    lib.moveLeft();
   }
 
   void stop() {
@@ -42,6 +47,7 @@ class GameScene extends Scene {
   }
 
   Scene update() {
+    lib.update();
     for (int i = 0; i < canvases.length; i++) {
       canvases[i].update();
     }
@@ -50,10 +56,10 @@ class GameScene extends Scene {
   
   void draw() {
     background(200);
+    lib.draw();
     for (int i = 0; i < canvases.length; i++) {
       canvases[i].draw();
-    }
-    img.draw();
+    }  
   }
   
   void keyPressed() {    

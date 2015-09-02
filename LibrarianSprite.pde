@@ -22,8 +22,6 @@ class LibrarianSprite extends Sprite {
   private void setupLibrarian() {
     librarian.scale = 2;
     librarian.x = width - librarian.width * .5 * librarian.scale;
-    librarian.y = height * .75;
-
     librarian.setFPS(12);
     setupAnimation(framesLeft);
   }
@@ -33,10 +31,18 @@ class LibrarianSprite extends Sprite {
       librarian.addFrame(0, set[i]);
     }
   }
+  
+  void setY (float y) {
+    this.y = librarian.y = y;
+  }
 
   void setupPicture(String filename) {
+    setupPicture(filename, 1);
+  }
+  
+  void setupPicture(String filename, float scale) {
     picture = new Sprite(filename);
-    picture.scale = 1;
+    picture.scale = scale;
     picture.x = width - picture.width * .5 * picture.scale;
     picture.y = librarian.y - picture.height * picture.scale + 10;
   }
