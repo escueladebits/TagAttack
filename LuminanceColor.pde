@@ -4,24 +4,40 @@
   See License info at the end of the file.
 */
 
-abstract class Scene {
-  protected TagAttack app;
-  protected LuminancePalette palette;
-
-  Scene (TagAttack app, LuminancePalette palette) {
-    this.app = app;
+class LuminanceColor {
+  
+  private int index,
+              luminance;
+              
+  private LuminancePalette palette;
+              
+  public LuminanceColor(int index, LuminancePalette palette) {
+    this.luminance = 0;
+    this.index = index;
     this.palette = palette;
   }
-  abstract Scene update();
   
-  abstract void start();
-
-  abstract void stop();
-
-  abstract void draw();
-
-  void keyPressed() {
+  public color getColor() {
+    RGB c = palette.getColor(index, luminance);
+    return color(c.R, c.G, c.B);
   }
+  
+  public LuminanceColor copy() {
+    LuminanceColor copy = new LuminanceColor(index, palette);
+    copy.luminance = luminance;
+    return copy;
+  }
+  
+  public LuminanceColor lighter() {
+    luminance = ++luminance > 3 ? --luminance : luminance;
+    return this;
+  }
+  
+  public LuminanceColor darker() {
+    luminance = --luminance < 0 ? ++luminance : luminance;
+    return this;
+  }
+ 
 }
 
 /*

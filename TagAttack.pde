@@ -19,10 +19,13 @@ import processing.sound.*;
 
 Scene currentScene, introScene, gameScene;
 
+LuminancePalette palette;
+
 void setup() {
   size(800, 600);
-  gameScene = new GameScene(this);
-  introScene = new IntroScene(this, gameScene);
+  palette = new LuminancePalette(LuminancePalette.NES);
+  gameScene = new GameScene(this, palette);
+  introScene = new IntroScene(this, palette, gameScene);
   currentScene = introScene;
   currentScene.start();
 }

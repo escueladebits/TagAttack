@@ -13,23 +13,23 @@ class TagCanvas {
   ArrayList minis;
   float deltaX, deltaY;
   
-  color c;
+  LuminanceColor c;
   
   float wide;
   PFont font;
   
-  TagCanvas(int sector, String tag, float wide, PFont font) {
+  TagCanvas(int sector, String tag, float wide, PFont font, LuminanceColor col) {
     this.wide = wide;
     this.font = font;
     minis = new ArrayList();
     this.tag = tag;
+    c = col;
 
     if (sector == UP) {
       x = wide;
       y = 0;
       this.w = width - wide;
-      this.h = wide;
-      c = color(255, 0, 0);
+      this.h = wide;      
       textX = x + 0.8 * this.w;
       textY = y + 0.35 * this.h;
       deltaX = wide + 0.5;
@@ -40,7 +40,6 @@ class TagCanvas {
       y = height - wide;
       this.w = width - wide;
       this.h = wide;
-      c = color(0, 255, 0);
       textX = x + 0.02 * this.w;
       textY = y + 0.35 * this.h;
       deltaX = wide + 0.5;
@@ -52,7 +51,6 @@ class TagCanvas {
       w = wide;
       this.h = height - wide;
       this.w = wide;
-      c = color(0, 0, 255);
       textX = x + 0.3 * this.w;
       textY = y + 0.1 * this.h;
       deltaX = 0;
@@ -63,7 +61,6 @@ class TagCanvas {
       y = wide;
       this.h = height - wide;
       this.w = wide;
-      c = color(0, 255, 255);
       textX = x + 0.3 * this.w;
       textY = y + 0.95 * this.h;
       deltaX = 0;
@@ -81,7 +78,7 @@ class TagCanvas {
   void draw() {
     noStroke();
     textFont(font, 32);
-    fill(c);
+    fill(c.getColor());
     rect(this.x, this.y, this.w, this.h);    
 
     for (int i = 0; i < minis.size(); i++) {
@@ -89,12 +86,9 @@ class TagCanvas {
       spr.draw();     
     }
 
-    colorMode(HSB);
-    color c2 = color(hue(c), saturation(c), brightness(c) * .7);
-    fill(c2);
+    fill(c.copy().lighter().getColor());
     text(tag, textX, textY);
     noFill();
-    colorMode(RGB);
   }
   
   void addImage(Sprite img) {

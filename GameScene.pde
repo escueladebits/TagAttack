@@ -10,20 +10,24 @@ class GameScene extends Scene {
   TagCanvas[] canvases;
   SoundFile music;
   
-  GameScene(TagAttack app) {
-    super(app);
+  LibrarianSprite lib;
+  LuminanceColor backgroundColor;
+  
+  GameScene(TagAttack app, LuminancePalette palette) {
+    super(app, palette);
     img = new Sprite("10997265356_0f8e16452f_q.jpg");
     PFont arcadeFont = loadFont("04b03-48.vlw");
     float wide = .17 * width;
 
+    backgroundColor = palette.createColor(6, 3);
     setPicture();
 
     String[] tags = TagManager.access().getNRandomTags(4);
     canvases = new TagCanvas[4];
-    canvases[0] = new TagCanvas(UP, tags[0], wide, arcadeFont);
-    canvases[1] = new TagCanvas(DOWN, tags[1], wide, arcadeFont);
-    canvases[2] = new TagCanvas(LEFT, tags[2], wide, arcadeFont);
-    canvases[3] = new TagCanvas(RIGHT, tags[3], wide, arcadeFont);
+    canvases[0] = new TagCanvas(UP, tags[0], wide, arcadeFont, palette.createColor(2,1));
+    canvases[1] = new TagCanvas(DOWN, tags[1], wide, arcadeFont, palette.createColor(6,1));
+    canvases[2] = new TagCanvas(LEFT, tags[2], wide, arcadeFont, palette.createColor(4,1));
+    canvases[3] = new TagCanvas(RIGHT, tags[3], wide, arcadeFont, palette.createColor(10,1));
   }
   
   private void setPicture() {
@@ -55,7 +59,7 @@ class GameScene extends Scene {
   }
   
   void draw() {
-    background(200);
+    background(backgroundColor.getColor());
     lib.draw();
     for (int i = 0; i < canvases.length; i++) {
       canvases[i].draw();

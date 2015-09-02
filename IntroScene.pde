@@ -16,10 +16,13 @@ class IntroScene extends Scene {
   boolean exit;
 
   BlinkerText blinker;
+  
+  LuminanceColor backgroundColor;
 
-  IntroScene(TagAttack app, Scene nextScene) {
-    super(app);
+  IntroScene(TagAttack app, LuminancePalette palette, Scene nextScene) {
+    super(app, palette);
     loadItems();
+    backgroundColor = palette.createColor(6, 3);
 
     this.nextScene = nextScene;
     exit = false;
@@ -72,7 +75,7 @@ class IntroScene extends Scene {
   }
 
   void draw() {
-    background(240,208,176);
+    background(backgroundColor.getColor());
 
     displayTitle();
     blinker.draw();
