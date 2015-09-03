@@ -14,8 +14,6 @@ class IntroScene extends Scene {
 
   boolean exit;
 
-  BlinkerText blinker;
-  
   LuminanceColor backgroundColor;
   LuminanceColor textColor;
 
@@ -29,22 +27,11 @@ class IntroScene extends Scene {
     yuriFox = new LibrarianSprite("yurifox.png", width, height);
     yuriFox.setY(.75 * height);
     yuriFox.setupPicture("10997265356_0f8e16452f_q.jpg");
-
-    blinker = createBlinker();
   }
 
   private void loadItems() {
     arcadeFont = loadFont("04b03-48.vlw");
     introMusic = new SoundFile(app, "Ozzed_-_Satisfucktion.mp3");
-  }
-
-  private BlinkerText createBlinker() {
-    BlinkerText b = new BlinkerText(3);
-    b.text = "Press <START>";
-    b.x = width * .32;
-    b.y = height * .47;
-    b.size = 40;
-    return b;
   }
 
   private void startScene() {
@@ -86,9 +73,7 @@ class IntroScene extends Scene {
 
     yuriFox.draw();
 
-    LuminanceColor blinkColor = palette.createColor(floor(random(1,14)), floor(random(0, 3)));
-    fill(blinkColor.getColor());
-    blinker.draw();
+    displayBlinker();
   }
 
   private void displayTitle() {
@@ -103,6 +88,17 @@ class IntroScene extends Scene {
     textSize(20);
     String footer = "Copyright 2015 Escuela de Bits, GPL Licensed";
     text(footer, width * .44, height * .97);
+  }
+  
+  private void displayBlinker() {
+    LuminanceColor blinkColor = palette.createColor(floor(random(1,14)), floor(random(0, 3)));
+    fill(blinkColor.getColor());
+    String text = "Press <START>";
+    float x = width * .32;
+    float y = height * .47;
+    int size = 40;
+    textSize(size);
+    text(text, x, y);
   }
 
   void keyPressed() {
