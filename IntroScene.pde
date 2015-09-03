@@ -12,19 +12,18 @@ class IntroScene extends Scene {
 
   LibrarianSprite yuriFox;
 
-  Scene nextScene;
   boolean exit;
 
   BlinkerText blinker;
   
   LuminanceColor backgroundColor;
+  LuminanceColor textColor;
 
-  IntroScene(TagAttack app, LuminancePalette palette, Scene nextScene) {
+  IntroScene(TagAttack app, LuminancePalette palette) {
     super(app, palette);
     loadItems();
     backgroundColor = palette.createColor(6, 3);
 
-    this.nextScene = nextScene;
     exit = false;
 
     yuriFox = new LibrarianSprite("yurifox.png", width, height);
@@ -54,7 +53,11 @@ class IntroScene extends Scene {
   }
 
   void start() {
-    startScene();
+    if (!pause) {
+      startScene();
+    }
+    pause = false;
+    textColor = palette.createColor(floor(random(1,12)), 1);
   }
 
   void stop() {
@@ -70,17 +73,22 @@ class IntroScene extends Scene {
     else {
       exit = false;
       introMusic.stop();
-      return nextScene;
+      return otherScene;
     }
   }
 
   void draw() {
     background(backgroundColor.getColor());
 
-    displayTitle();
-    blinker.draw();
+    fill(textColor.getColor());
+    displayTitle();    
     displayFooter();
+
     yuriFox.draw();
+
+    LuminanceColor blinkColor = palette.createColor(floor(random(1,14)), floor(random(0, 3)));
+    fill(blinkColor.getColor());
+    blinker.draw();
   }
 
   private void displayTitle() {

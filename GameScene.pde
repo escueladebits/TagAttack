@@ -37,17 +37,24 @@ class GameScene extends Scene {
   }
   
   void start() {
-    music = new SoundFile(app, "Ozzed_-_8-bit_Party.mp3");
-    music.play();
-    
-    lib = new LibrarianSprite("yurifox.png", width, height);
-    lib.setY(width * .47);
-    lib.setupPicture("10997265356_0f8e16452f_q.jpg", 1.5);
-    lib.moveLeft();
+    if (!pause) {
+      music = new SoundFile(app, "Ozzed_-_8-bit_Party.mp3");
+      music.play();
+      
+      lib = new LibrarianSprite("yurifox.png", width, height);
+      lib.setY(width * .47);
+      lib.setupPicture("10997265356_0f8e16452f_q.jpg", 1.5);
+      lib.moveLeft();
+    }
+    pause = false;
   }
 
   void stop() {
     music.stop();
+  }
+  
+  void pause() {
+    super.pause();
   }
 
   Scene update() {
@@ -67,10 +74,14 @@ class GameScene extends Scene {
   }
   
   void keyPressed() {    
+    
     canvases[0].addImage(img);
     img = new Sprite("10997290916_57a15cf58d_q.jpg");
     setPicture();
+    
   }
+  
+  
 }
 
 /*

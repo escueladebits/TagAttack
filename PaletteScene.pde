@@ -4,38 +4,47 @@
   See License info at the end of the file.
 */
 
-abstract class Scene {
-  protected TagAttack app;
-  protected LuminancePalette palette;
-  protected Scene otherScene;
-  protected boolean pause;
-
-  Scene (TagAttack app, LuminancePalette palette) {
-    this.app = app;
-    this.palette = palette;
-  }
-  abstract Scene update();
+class PaletteScene extends Scene {
   
+  float sizeX, sizeY;
+  boolean active;
   
-  abstract void start();
-  
-  void start(Scene otherScene) {
-    this.otherScene = otherScene;
-    this.start();
-  }
-
-  abstract void stop();
-
-  abstract void draw();
-  
-  void pause() {
-    pause = true;
-  }
-
-  void keyPressed() {
+  PaletteScene(TagAttack app, LuminancePalette palette) {
+    super(app, palette);
   }
   
-  void keyReleased() {
+  void start() {
+    sizeX = width / 17;
+    sizeY = height / 5;
+    stroke(90);
+    active = true;
+  }
+  
+  void stop() {
+    active = false;
+  }
+  
+  public Scene update() {
+    if (active) {
+      return this;
+    }
+    else {      
+      return otherScene;
+    }
+  }
+  
+  void draw() {
+    translate(sizeX * .5, sizeY * .5);
+    for (int l = 0; l < 4; l++) {
+      for (int c = 0; c < 16; c++) {
+        fill(palette.createColor(c, l).getColor());
+        rect(c * sizeX, l* sizeY, sizeX, sizeY);
+      }
+    }
+  }
+  
+  public void keyReleased() {
+    this.stop();
   }
 }
 

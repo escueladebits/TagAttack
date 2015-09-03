@@ -17,7 +17,7 @@ import processing.sound.*;
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-Scene currentScene, introScene, gameScene;
+Scene currentScene, introScene, gameScene, tunningScene;
 
 LuminancePalette palette;
 
@@ -26,14 +26,16 @@ void setup() {
   noSmooth();
   palette = new LuminancePalette(LuminancePalette.NES);
   gameScene = new GameScene(this, palette);
-  introScene = new IntroScene(this, palette, gameScene);
-  currentScene = introScene;
-  currentScene.start();
+  introScene = new IntroScene(this, palette);
+  tunningScene = new PaletteScene(this, palette);
+  introScene.start(gameScene);
+  currentScene = introScene;  
 }
 
 void draw() {
   Scene newScene = currentScene.update();
-  if (newScene != currentScene) {
+
+  if (newScene != currentScene) {    
     currentScene.stop();
     currentScene = newScene;
     currentScene.start();
@@ -43,5 +45,16 @@ void draw() {
 }
 
 void keyPressed() {
-  currentScene.keyPressed();
+  if ((key == 'R' || key == 'r') && currentScene != tunningScene) {
+    currentScene.pause();
+    tunningScene.start(currentScene);
+    currentScene = tunningScene;
+  }
+  else {
+    currentScene.keyPressed();
+  }
+}
+
+void keyReleased() {
+  currentScene.keyReleased();
 }
