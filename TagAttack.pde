@@ -23,6 +23,7 @@ LuminancePalette palette;
 
 void setup() {
   size(800, 600);
+  noSmooth();
   palette = new LuminancePalette(LuminancePalette.NES);
   gameScene = new GameScene(this, palette);
   introScene = new IntroScene(this, palette, gameScene);
