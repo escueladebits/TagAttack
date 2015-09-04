@@ -17,6 +17,14 @@
 
 var currentScene;
 
+var yuriAnimation;
+var pictureImages = [];
+
+function preload() {
+  yuriAnimation = loadAnimation('data/yuriWalking_1.png', 'data/yuriWalking_4.png');
+  pictureImages[0] = loadImage('data/10997265356_0f8e16452f_q.jpg');
+}
+
 function setup() {
   createCanvas(640, 400);
   noSmooth();
@@ -32,9 +40,14 @@ function IntroScene(palette) {
   this.palette = palette;
 
   var backgroundColor = palette.createColor(6, 3);
+  yuriFox.setY(height * .75);
+  var limits = new GroundLimitsSprite();
+  var yuriFox = new LibrarianSprite(yuriAnimation, pictureImages[0], limits);
 
   this.draw = function() {
-    background(backgroundColor.getColor());  
+    background(backgroundColor.getColor());
+    yuriFox.update();
+    yuriFox.draw();
   };
 }
 
@@ -147,5 +160,75 @@ function LuminanceColor(index, palette) {
   this.getColor = function() {
     var c = palette.getColor(index, this.luminance);
     return color(c.R, c.G, c.B);
+  };
+}
+
+function LibrarianSprite(animation, picture, limits) {
+  var group = new Group();
+
+  var character = setupCharacter(animation);
+  var item = setupPicture(picture);
+
+  group.add(item);
+  group.add(character);
+  character.velocity.x = -2;
+  item.velocity.x = -2;
+
+  this.setY = function(y) {
+    character.position.y = y;
+    item.position.y = character.position.y - picture.height * .5 * item.scale - animation.getFrameImage().height * .5 * character.scale + item.scale * 10;
+  };
+
+  this.draw = function() {
+    drawSprites(group);
+  }
+
+  this.update = function() {
+    if (limits.collide(character)) {
+       flip();
+    }
+  }
+
+  function setupCharacter(animation) {
+    var character = createSprite(-100, -100, animation.getFrameImage().width, animation.getFrameImage().height);
+    character.scale = 2;
+    character.position.x = width * .5;
+    character.addAnimation('walking', animation);
+    character.depth = 100;
+    return character;
+  }
+
+  function setupPicture(picture) {
+    var item = createSprite(-100, -100, picture.width, picture.height);
+    item.addImage('still', picture);
+    item.changeAnimation('still');
+    item.position.x = character.position.x;
+    item.depth = 0;
+    return item;
+  }
+
+  function flip() {
+    character.velocity.x = - character.velocity.x;
+    item.velocity.x = -item.velocity.x;
+    character.mirrorX(-character.mirrorX());
+  }
+}
+
+function GroundLimitsSprite() {
+  var top = createSprite(width * .5, -50, width, 100);
+  var bottom = createSprite(width *.5, height + 50, width, 100);
+  var left = createSprite(-50, height * .5, 100, height);
+  var right = createSprite(width + 50, height * .5, 100, height);
+
+  top.immomable = bottom.immomable = left.immomable = right.immomable = true;
+
+  var group = new Group();
+  group.add(top);
+  group.add(bottom);
+  group.add(left);
+  group.add(right);
+
+  this.collide = function(sprite) {
+    return sprite.overlap(group);
   };
 }
