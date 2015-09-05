@@ -19,14 +19,16 @@ var currentScene;
 
 var yuriAnimation;
 var pictureImages = [];
+var arcadeFont;
 
 function preload() {
   yuriAnimation = loadAnimation('data/yuriWalking_1.png', 'data/yuriWalking_4.png');
   pictureImages[0] = loadImage('data/10997265356_0f8e16452f_q.jpg');
+  arcadeFont = loadFont('data/04B_03__.ttf');
 }
 
 function setup() {
-  createCanvas(640, 400);
+  createCanvas(800, 600);
   noSmooth();
   var NES_Palette = new LuminancePalette('NES');
   currentScene = new IntroScene(NES_Palette);    
@@ -40,15 +42,45 @@ function IntroScene(palette) {
   this.palette = palette;
 
   var backgroundColor = palette.createColor(6, 3);
-  yuriFox.setY(height * .75);
+  var textColor = palette.createColor(floor(random(1,12)), 1);
   var limits = new GroundLimitsSprite();
   var yuriFox = new LibrarianSprite(yuriAnimation, pictureImages[0], limits);
+  yuriFox.setY(height * .85);
 
   this.draw = function() {
     background(backgroundColor.getColor());
     yuriFox.update();
+
+    fill(textColor.getColor());
+    noStroke();
+    displayTitle();
+    displayFooter();
+    displayBlinker();
+
     yuriFox.draw();
   };
+
+  function displayTitle() {
+    textFont(arcadeFont);
+    textSize(125);
+    text("Tag Attack", width * .10, height * .283);
+  }
+
+  function displayFooter() {
+    textFont(arcadeFont);
+    textSize(20);
+    var footer = "Copyright 2015 Escuela de Bits, GPL Licensed";
+    text(footer, width * .40, height * .97);
+  }
+
+  function displayBlinker() {
+    var blinkColor = palette.createColor(floor(random(1,14)), floor(random(0, 3)));
+    fill(blinkColor.getColor());
+    var x = width * .32;
+    var y = height * .47;
+    textSize(40);
+    text("Press <START>", x, y);
+  }
 }
 
 function LuminancePalette(type) {
