@@ -1,6 +1,6 @@
 /*
   Copyright 2015 Antonio Jesús Sánchez Padial
-  
+
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation, either version 3 of the License, or
@@ -25,13 +25,14 @@ function preload() {
   yuriAnimation = loadAnimation('data/yuriWalking_1.png', 'data/yuriWalking_4.png');
   pictureImages[0] = loadImage('data/10997265356_0f8e16452f_q.jpg');
   arcadeFont = loadFont('data/04B_03__.ttf');
+  introMusic = loadSound('data/Ozzed_-_8-bit_Party.mp3');
 }
 
 function setup() {
   createCanvas(800, 600);
   noSmooth();
   var NES_Palette = new LuminancePalette('NES');
-  currentScene = new IntroScene(NES_Palette);    
+  currentScene = new IntroScene(NES_Palette);
 }
 
 function draw() {
@@ -46,6 +47,8 @@ function IntroScene(palette) {
   var limits = new GroundLimitsSprite();
   var yuriFox = new LibrarianSprite(yuriAnimation, pictureImages[0], limits);
   yuriFox.setY(height * .85);
+
+  introMusic.play();
 
   this.draw = function() {
     background(backgroundColor.getColor());
