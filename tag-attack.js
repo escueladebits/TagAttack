@@ -32,7 +32,9 @@ function setup() {
   createCanvas(800, 600);
   noSmooth();
   var NES_Palette = new LuminancePalette('NES');
+  var tunningScene = new PaletteScene(NES_Palette);
   currentScene = new IntroScene(NES_Palette);
+//  currentScene = tunningScene;
 }
 
 function draw() {
@@ -266,4 +268,22 @@ function GroundLimitsSprite() {
   this.collide = function(sprite) {
     return sprite.overlap(group);
   };
+}
+
+function PaletteScene(palette) {
+  var sizeX = width / 17;
+  var sizeY = height / 5;
+  stroke(90);
+  var active = true;
+  console.log(sizeX, sizeY);
+
+  this.draw = function() {
+    translate(sizeX * .5, sizeY * .5);
+    for (var l = 0; l < 4; l++) {
+      for (var c = 0; c < 16; c++) {
+        fill(palette.createColor(c, l).getColor());
+        rect(c * sizeX, l* sizeY, sizeX, sizeY);
+      }
+    }
+  }
 }
