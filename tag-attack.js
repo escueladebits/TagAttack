@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var currentScene;
+var currentScene, tunningScene;
 
 var yuriAnimation;
 var pictureImages = [];
@@ -32,14 +32,30 @@ function setup() {
   createCanvas(800, 600);
   noSmooth();
   var NES_Palette = new LuminancePalette('NES');
-  var tunningScene = new PaletteScene(NES_Palette);
+  tunningScene = new PaletteScene(NES_Palette);
   currentScene = new IntroScene(NES_Palette);
-//  currentScene = tunningScene;
 }
 
 function draw() {
+  keyboardManager();
+  var newScene = currentScene.update();
+  if (currentScene != newScene) {
+    currentScene.stop();
+    currentScene = newScene;
+    currentScene.start();
+  }
   currentScene.draw();
+
+  function keyboardManager() {
+    if ((keyWentDown('r') || keyWentDown('R')) && currentScene != tunningScene) {
+      currentScene.pause();
+      tunningScene.start(currentScene);
+      currentScene = tunningScene;
+    }
+    currentScene.keyboardManager();
+  }
 }
+
 
 function IntroScene(palette) {
   this.palette = palette;
@@ -64,6 +80,26 @@ function IntroScene(palette) {
 
     yuriFox.draw();
   };
+
+  this.update = function() {
+    return this;
+  }
+
+  this.keyboardManager = function() {
+
+  }
+
+  this.start = function(scene) {
+    introMusic.play();
+  };
+
+  this.stop = function() {
+    introMusic.stop();
+  };
+
+  this.pause = function() {
+    introMusic.stop();
+  }
 
   function displayTitle() {
     textFont(arcadeFont);
@@ -271,6 +307,8 @@ function GroundLimitsSprite() {
 }
 
 function PaletteScene(palette) {
+  var otherScene;
+  var stop;
   var sizeX = width / 17;
   var sizeY = height / 5;
   stroke(90);
@@ -284,6 +322,25 @@ function PaletteScene(palette) {
         fill(palette.createColor(c, l).getColor());
         rect(c * sizeX, l* sizeY, sizeX, sizeY);
       }
+    }
+  }
+
+  this.start = function(scene) {
+    otherScene = scene;
+    active = true;
+  }
+
+  this.stop = function() {
+    active = false;
+  }
+
+  this.update = function() {
+    return active ? this : otherScene;
+  }
+
+  this.keyboardManager = function() {
+    if (keyWentUp('r') || keyWentUp('R')) {
+      this.stop();
     }
   }
 }
