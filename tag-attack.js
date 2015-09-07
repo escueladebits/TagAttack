@@ -21,21 +21,33 @@ var yuriAnimation;
 var pictureImages = [];
 var arcadeFont;
 
+var BL_Collection, tags;
+
 function preload() {
   yuriAnimation = loadAnimation('data/yuriWalking_1.png', 'data/yuriWalking_4.png');
   pictureImages[0] = loadImage('data/10997265356_0f8e16452f_q.jpg');
   arcadeFont = loadFont('data/04B_03__.ttf');
   introMusic = loadSound('data/Ozzed_-_Satisfucktion.mp3');
+
+  sampleset = loadStrings('data/sampleset.csv');
 }
 
 function setup() {
   createCanvas(800, 600);
   noSmooth();
+  initCollectionDictionary();
   var NES_Palette = new LuminancePalette('NES');
   tunningScene = new PaletteScene(NES_Palette);
   currentScene = new IntroScene(NES_Palette);
 
   currentScene.start();
+}
+
+function initCollectionDictionary() {
+  sampleset.shift();
+  BL_Collection = _.map(sampleset, function(line) { return new BL_Image(line);});
+  BL_Collection = _.groupBy(BL_Collection, 'tag');
+  tags = _.map(BL_Collection, function(item) { return item[0].tag;});
 }
 
 function draw() {
@@ -504,4 +516,16 @@ function Clock(x, y, lap) {
     noFill();
     ellipse(x, y, 95, 95);
   };
+}
+
+function BL_Image(csv) {
+  var data = csv.split(',');
+
+  this.flickrid = data[0];
+  this.url = data[1];
+  this.tag = data[2];
+  this.largeSquare = data[3];
+  this.small = data[4];
+  this.medium = data[5];
+  this.large = data[6];
 }
