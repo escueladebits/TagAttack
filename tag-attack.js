@@ -320,7 +320,6 @@ function PaletteScene(palette) {
   var sizeY = height / 5;
   stroke(90);
   var active = true;
-  console.log(sizeX, sizeY);
 
   this.draw = function() {
     translate(sizeX * .5, sizeY * .5);
