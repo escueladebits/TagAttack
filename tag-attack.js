@@ -102,7 +102,7 @@ function IntroScene(palette) {
 
   this.pause = function() {
     introMusic.stop();
-  }
+  };
 
   function displayTitle() {
     textFont(arcadeFont);
@@ -257,13 +257,13 @@ function LibrarianSprite(animation, picture, limits) {
 
   this.draw = function() {
     drawSprites(group);
-  }
+  };
 
   this.update = function() {
     if (limits.collide(character)) {
        flip();
     }
-  }
+  };
 
   function setupCharacter(animation) {
     var character = createSprite(-100, -100, animation.getFrameImage().width, animation.getFrameImage().height);
@@ -326,24 +326,27 @@ function PaletteScene(palette) {
         rect(c * sizeX, l* sizeY, sizeX, sizeY);
       }
     }
-  }
+  };
 
   this.start = function(scene) {
     otherScene = scene;
     active = true;
-  }
+  };
 
   this.stop = function() {
     active = false;
-  }
+  };
 
   this.update = function() {
     return active ? this : otherScene;
-  }
+  };
 
   this.keyboardManager = function() {
     if (keyWentUp('r') || keyWentUp('R')) {
       this.stop();
     }
+  };
+}
+
   }
 }
