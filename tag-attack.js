@@ -115,6 +115,7 @@ function IntroScene(palette) {
     textSize(20);
     var footer = "Copyright 2015 Escuela de Bits, GPL Licensed";
     text(footer, width * .40, height * .97);
+    text('Music by @OzzedNet', width * .01, height * .97);
   }
 
   function displayBlinker() {
