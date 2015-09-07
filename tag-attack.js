@@ -237,6 +237,10 @@ function LuminanceColor(index, palette) {
     var c = palette.getColor(index, this.luminance);
     return color(c.R, c.G, c.B);
   };
+
+  this.lighter = function() {
+    this.luminance++;
+  };
 }
 
 function LibrarianSprite(animation, picture, limits) {
@@ -348,5 +352,156 @@ function PaletteScene(palette) {
   };
 }
 
+function GameScene(palette) {
+  var wide = .17 * width;
+  var canvases = [];
+  var selectedCanvas = -1;
+  var clock = new Clock (.82 * width, .2 * height, 25);
+
+  canvases[0] = new TagCanvas('UP', 'hola', wide, palette.createColor(2, 1));
+  canvases[1] = new TagCanvas('DOWN', 'adios', wide, palette.createColor(6,1));
+  canvases[2] = new TagCanvas('LEFT', 'otro', wide, palette.createColor(4, 1));
+  canvases[3] = new TagCanvas('RIGHT', 'ningun', wide, palette.createColor(10, 1));
+
+  var backgroundColor = palette.createColor(6, 3);
+
+  this.draw = function() {
+    background(backgroundColor.getColor());
+    canvases.forEach(defaultLight);
+    if (selectedCanvas != -1) {
+      canvases[selectedCanvas].highlight();
+    }
+    canvases.forEach(drawCanvas);
+    clock.draw();
+  };
+
+  this.update = function() {
+    if (clock.update()) {
+      return this;
+    }
+    else {
+      return new IntroScene(palette);
+    }
+  };
+
+  this.start = function() {
+    clock.start();
+  };
+
+  this.stop = function() {
+  };
+
+  this.keyboardManager = function() {
+    if (keyDown(UP_ARROW)) {
+      selectedCanvas = 0;
+    }
+    else if (keyDown(DOWN_ARROW)) {
+      selectedCanvas = 1;
+    }
+    else if (keyDown(LEFT_ARROW)) {
+      selectedCanvas = 2;
+    }
+    else if (keyDown(RIGHT_ARROW)) {
+      selectedCanvas = 3;
+    }
+    else {
+      selectedCanvas = -1;
+    }
+
+  };
+
+  function drawCanvas(canvas) {
+    canvas.draw();
   }
+
+  function defaultLight(canvas) {
+    canvas.defaultLight();
+  }
+}
+
+function TagCanvas(position, tag, size, col) {
+  var x, y, w, h;
+  var textX, textY;
+
+  var wide = size;
+
+  switch (position) {
+    case 'UP':
+      x = wide;
+      y = 0;
+      w = width - wide;
+      h = wide;
+      textX = x + .8 * w;
+      textY = y + .35 * h;
+      break;
+    case 'DOWN':
+      x = 0;
+      y = height - wide;
+      w = width - wide;
+      h = wide;
+      textX = x + 0.02 * w;
+      textY = y + 0.35 * h;
+      break;
+    case 'LEFT':
+      x = 0;
+      y = 0;
+      w = wide;
+      h = height - wide;
+      textX = x + 0.3 * w;
+      textY = y + 0.1 * h;
+      break;
+    case 'RIGHT':
+      x = width - wide;
+      y = wide;
+      h = height - wide;
+      w = wide;
+      textX = x + 0.3 * w;
+      textY = y + 0.95 * h;
+      break;
+  }
+
+  this.draw = function() {
+    noStroke();
+    fill(col.getColor());
+    rect(x, y, w, h);
+  };
+
+  this.highlight = function() {
+    col.lighter();
+  };
+
+  this.defaultLight = function() {
+    col.luminance = 1;
+  };
+}
+
+function Clock(x, y, lap) {
+  var time0, t;
+
+  this.start = function() {
+    time0 = millis();
+    console.log(time0);
+  };
+
+  this.update = function() {
+    t = millis();
+    if (t -time0 >= lap * 1000) {
+      return false;
+    }
+    return true;
+  };
+
+  this.draw = function() {
+    ellipseMode(CENTER);
+    fill(255, 255, 255, 150);
+    ellipse(x, y, 90, 90);
+    fill(100, 100, 100, 150);
+    //console.log(t, time0, t - time0);
+    //console.log(map(t - time0, 0, lap * 1000, 0, TWO_PI));
+    arc(x, y, 90, 90, 0, map(t - time0, 0, lap * 1000, 0, TWO_PI));
+    stroke(0);
+    strokeWeight(5);
+    noFill();
+    ellipse(x, y, 95, 95);
+  };
 }
