@@ -34,6 +34,8 @@ function setup() {
   var NES_Palette = new LuminancePalette('NES');
   tunningScene = new PaletteScene(NES_Palette);
   currentScene = new IntroScene(NES_Palette);
+
+  currentScene.start();
 }
 
 function draw() {
@@ -58,6 +60,7 @@ function draw() {
 
 
 function IntroScene(palette) {
+  var nextScene = this;
   this.palette = palette;
 
   var backgroundColor = palette.createColor(6, 3);
@@ -65,8 +68,6 @@ function IntroScene(palette) {
   var limits = new GroundLimitsSprite();
   var yuriFox = new LibrarianSprite(yuriAnimation, pictureImages[0], limits);
   yuriFox.setY(height * .85);
-
-  introMusic.play();
 
   this.draw = function() {
     background(backgroundColor.getColor());
@@ -82,12 +83,14 @@ function IntroScene(palette) {
   };
 
   this.update = function() {
-    return this;
-  }
+    return nextScene;
+  };
 
   this.keyboardManager = function() {
-
-  }
+    if (keyWentDown('z') || keyWentDown('Z')) {
+      nextScene = new GameScene(palette);
+    }
+  };
 
   this.start = function(scene) {
     introMusic.play();
