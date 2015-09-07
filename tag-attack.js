@@ -25,7 +25,7 @@ function preload() {
   yuriAnimation = loadAnimation('data/yuriWalking_1.png', 'data/yuriWalking_4.png');
   pictureImages[0] = loadImage('data/10997265356_0f8e16452f_q.jpg');
   arcadeFont = loadFont('data/04B_03__.ttf');
-  introMusic = loadSound('data/Ozzed_-_8-bit_Party.mp3');
+  introMusic = loadSound('data/Ozzed_-_Satisfucktion.mp3');
 }
 
 function setup() {
