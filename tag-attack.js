@@ -384,7 +384,7 @@ function PaletteScene(palette) {
 }
 
 function GameScene(palette, libraryRecords) {
-  var wide = .17 * width;
+  var wide = .13 * width;
   var canvases = [];
   var selectedCanvas = -1;
   var libraryIndex = 0;
