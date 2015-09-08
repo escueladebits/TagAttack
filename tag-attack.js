@@ -94,7 +94,6 @@ function IntroScene(palette) {
 
   this.draw = function() {
     background(backgroundColor.getColor());
-    yuriFox.update();
 
     fill(textColor.getColor());
     noStroke();
@@ -106,6 +105,7 @@ function IntroScene(palette) {
   };
 
   this.update = function() {
+    yuriFox.update();
     return nextScene;
   };
 
@@ -290,7 +290,9 @@ function LibrarianSprite(animation, picture, limits) {
   this.update = function() {
     if (limits.collide(character)) {
        flip();
+       return false;
     }
+    return true;
   };
 
   function setupCharacter(animation) {
@@ -308,6 +310,7 @@ function LibrarianSprite(animation, picture, limits) {
     item.changeAnimation('still');
     item.position.x = character.position.x;
     item.depth = 0;
+    item.scale = 1;
     return item;
   }
 
@@ -379,7 +382,10 @@ function GameScene(palette, libraryRecords) {
   var wide = .17 * width;
   var canvases = [];
   var selectedCanvas = -1;
+  var libraryIndex = 0;
   var clock = new Clock (.82 * width, .2 * height, 25);
+  var nextImg = null;
+  var loading = false;
 
   canvases[0] = new TagCanvas('UP', 'hola', wide, palette.createColor(2, 1));
   canvases[1] = new TagCanvas('DOWN', 'adios', wide, palette.createColor(6,1));
@@ -387,19 +393,39 @@ function GameScene(palette, libraryRecords) {
   canvases[3] = new TagCanvas('RIGHT', 'ningun', wide, palette.createColor(10, 1));
 
   var backgroundColor = palette.createColor(6, 3);
+  var yuriFox;
+  var ready = false;
+  var limits = new GroundLimitsSprite();
+
+  console.log(libraryRecords[libraryIndex].small);
+  loadImage(libraryRecords[libraryIndex++].small, function(img) {
+    console.log('+++',img);
+    yuriFox = new LibrarianSprite(yuriAnimation, img, limits);
+    yuriFox.setY(height * .65);
+    ready = true;
+  }, function(e) {console.log(e);});
 
   this.draw = function() {
     background(backgroundColor.getColor());
     canvases.forEach(defaultLight);
+    if (ready) {
+      yuriFox.draw();
+    }
     if (selectedCanvas != -1) {
       canvases[selectedCanvas].highlight();
     }
     canvases.forEach(drawCanvas);
     clock.draw();
+
   };
 
   this.update = function() {
     if (clock.update()) {
+      if (ready) {
+        if (!yuriFox.update()) {
+          console.log('POW')
+        };
+      }
       return this;
     }
     else {
