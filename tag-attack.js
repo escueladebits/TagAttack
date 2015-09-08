@@ -422,8 +422,17 @@ function GameScene(palette, libraryRecords) {
   this.update = function() {
     if (clock.update()) {
       if (ready) {
+        if (nextImg == null && !loading) {
+          loading = true;
+          nextImg = loadImage('data/repo/' + libraryRecords[libraryIndex++].flickrid + '.jpg', function(img) {
+            loading = false;
+          });
+        }
         if (!yuriFox.update()) {
-          console.log('POW')
+          yuriFox = new LibrarianSprite(yuriAnimation, nextImg, limits);
+          yuriFox.setY(height * .65);
+          yuriFox.setX(width - 50);
+          nextImg = null;
         };
       }
       return this;
