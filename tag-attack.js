@@ -283,6 +283,11 @@ function LibrarianSprite(animation, picture, limits) {
     item.position.y = character.position.y - picture.height * .5 * item.scale - animation.getFrameImage().height * .5 * character.scale + item.scale * 10;
   };
 
+  this.setX = function(x) {
+    character.position.x = x;
+    item.position.x = character.position.x;
+  }
+
   this.draw = function() {
     drawSprites(group);
   };
@@ -402,6 +407,7 @@ function GameScene(palette, libraryRecords) {
     console.log('+++',img);
     yuriFox = new LibrarianSprite(yuriAnimation, img, limits);
     yuriFox.setY(height * .65);
+    yuriFox.setX(width - 50);
     ready = true;
   }, function(e) {console.log(e);});
 
