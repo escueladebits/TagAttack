@@ -70,7 +70,6 @@ function draw() {
   }
 }
 
-
 function IntroScene(palette) {
   var nextScene = this;
   this.palette = palette;
@@ -79,7 +78,19 @@ function IntroScene(palette) {
   var textColor = palette.createColor(floor(random(1,12)), 1);
   var limits = new GroundLimitsSprite();
   var yuriFox = new LibrarianSprite(yuriAnimation, pictureImages[0], limits);
+  var imagesRecords = selectImageRecords();;
+
   yuriFox.setY(height * .85);
+
+  function selectImageRecords() {
+    imageRecords = _.reduce(BL_Collection, function(memo, collection, index) {
+      var n = index == 'UNTAGGED' ? 15 : 1;
+      for (var i = 0; i < n; i++) {
+        memo.push(collection[floor(random(collection.length))]);
+      }
+      return memo;
+    }, []);
+  }
 
   this.draw = function() {
     background(backgroundColor.getColor());
@@ -100,7 +111,7 @@ function IntroScene(palette) {
 
   this.keyboardManager = function() {
     if (keyWentDown('z') || keyWentDown('Z')) {
-      nextScene = new GameScene(palette);
+      nextScene = new GameScene(palette, imageRecords);
     }
   };
 
@@ -364,7 +375,7 @@ function PaletteScene(palette) {
   };
 }
 
-function GameScene(palette) {
+function GameScene(palette, libraryRecords) {
   var wide = .17 * width;
   var canvases = [];
   var selectedCanvas = -1;
