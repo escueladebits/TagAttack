@@ -403,7 +403,7 @@ function GameScene(palette, libraryRecords) {
   var limits = new GroundLimitsSprite();
 
   console.log(libraryRecords[libraryIndex].small);
-  loadImage(libraryRecords[libraryIndex++].small, function(img) {
+  loadImage('data/repo/' + libraryRecords[libraryIndex++].flickrid + '.jpg', function(img) {
     console.log('+++',img);
     yuriFox = new LibrarianSprite(yuriAnimation, img, limits);
     yuriFox.setY(height * .65);
