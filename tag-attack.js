@@ -473,7 +473,7 @@ function GameScene(palette, libraryRecords) {
     yuriFox = new LibrarianSprite(yuriAnimation, nextImg, limits);
     yuriFox.setY(height * .7);
     yuriFox.setX(width - 50);
-    yuriFox.setSpeed(-2);
+    yuriFox.setSpeed(-6);
     prevImg = nextImg;
     nextImg = null;
 
@@ -514,12 +514,12 @@ function GameScene(palette, libraryRecords) {
       resetLibrarian();
     }
     else if ((keyDown('z') || keyDown('Z')) && selectedCanvas == -1) {
-      yuriFox.setSpeed(-6);
     }
     else {
       if (ready) {
-        yuriFox.setSpeed(-2);
+        yuriFox.setSpeed(-10);
       }
+          yuriFox.setSpeed(-6);
     }
   };
 
