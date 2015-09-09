@@ -86,12 +86,13 @@ function IntroScene(palette) {
 
   function selectImageRecords() {
     imageRecords = _.reduce(BL_Collection, function(memo, collection, index) {
-      var n = index == 'UNTAGGED' ? 15 : 1;
+      var n = index == 'UNTAGGED' ? 120 : 8;
       for (var i = 0; i < n; i++) {
         memo.push(collection[floor(random(collection.length))]);
       }
       return memo;
     }, []);
+    imageRecords = _.sortBy(imageRecords, function() { return random(); });
   }
 
   this.draw = function() {
