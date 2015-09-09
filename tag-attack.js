@@ -411,7 +411,7 @@ function GameScene(palette, libraryRecords) {
   var canvases = [];
   var selectedCanvas = -1;
   var libraryIndex = 0;
-  var clock = new Clock (.82 * width, .2 * height, 180);
+  var clock = new Clock (.82 * width, .2 * height, 60);
   var nextImg = null, prevImg = null;
   var loading = false;
 
