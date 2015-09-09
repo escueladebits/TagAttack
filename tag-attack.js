@@ -28,6 +28,8 @@ function preload() {
   pictureImages[0] = loadImage('data/10997265356_0f8e16452f_q.jpg');
   arcadeFont = loadFont('data/04B_03__.ttf');
   introMusic = loadSound('data/Ozzed_-_Satisfucktion.mp3');
+  gameMusic = loadSound('data/Ozzed_-_8-bit_Party.mp3');
+  actionSound = loadSound('data/Pickup_Coin14.wav');
 
   sampleset = loadStrings('data/sampleset.csv');
 }
@@ -449,10 +451,16 @@ function GameScene(palette, libraryRecords) {
   };
 
   this.start = function() {
+    gameMusic.play();
     clock.start();
   };
 
   this.stop = function() {
+    gameMusic.stop();
+  };
+
+  this.pause = function() {
+    gameMusic.stop();
   };
 
   this.keyboardManager = function() {
@@ -472,6 +480,9 @@ function GameScene(palette, libraryRecords) {
       selectedCanvas = -1;
     }
 
+    if ((keyWentDown('z') || keyWentDown('Z')) && selectedCanvas != -1) {
+      actionSound.play();
+    }
   };
 
   function drawCanvas(canvas) {
