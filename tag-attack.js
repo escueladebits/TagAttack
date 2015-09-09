@@ -288,7 +288,7 @@ function LibrarianSprite(animation, picture, limits) {
   this.setX = function(x) {
     character.position.x = x;
     item.position.x = character.position.x;
-  }
+  };
 
   this.draw = function() {
     drawSprites(group);
@@ -404,9 +404,7 @@ function GameScene(palette, libraryRecords) {
   var ready = false;
   var limits = new GroundLimitsSprite();
 
-  console.log(libraryRecords[libraryIndex].small);
   loadImage('data/repo/' + libraryRecords[libraryIndex++].flickrid + '.jpg', function(img) {
-    console.log('+++',img);
     yuriFox = new LibrarianSprite(yuriAnimation, img, limits);
     yuriFox.setY(height * .65);
     yuriFox.setX(width - 50);
@@ -555,7 +553,6 @@ function Clock(x, y, lap) {
 
   this.start = function() {
     time0 = millis();
-    console.log(time0);
   };
 
   this.update = function() {
@@ -571,8 +568,6 @@ function Clock(x, y, lap) {
     fill(255, 255, 255, 150);
     ellipse(x, y, 90, 90);
     fill(100, 100, 100, 150);
-    //console.log(t, time0, t - time0);
-    //console.log(map(t - time0, 0, lap * 1000, 0, TWO_PI));
     arc(x, y, 90, 90, 0, map(t - time0, 0, lap * 1000, 0, TWO_PI));
     stroke(0);
     strokeWeight(5);
