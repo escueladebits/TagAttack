@@ -267,6 +267,13 @@ function LuminanceColor(index, palette) {
 
   this.lighter = function() {
     this.luminance++;
+    return this;
+  };
+
+  this.copy = function() {
+    var col = new LuminanceColor(index, palette);
+    col.luminance = this.luminance;
+    return col;
   };
 }
 
@@ -291,8 +298,21 @@ function LibrarianSprite(animation, picture, limits) {
     item.position.x = character.position.x;
   };
 
+  this.setSpeed = function(speed) {
+    character.velocity.x = speed;
+    item.velocity.x = speed;
+  };
+
   this.draw = function() {
     drawSprites(group);
+  };
+
+  this.getPictX = function() {
+    return item.position.x;
+  };
+
+  this.getPictY = function() {
+    return item.position.y;
   };
 
   this.update = function() {
@@ -387,18 +407,20 @@ function PaletteScene(palette) {
 }
 
 function GameScene(palette, libraryRecords) {
-  var wide = .13 * width;
+  var wide = .15 * width;
   var canvases = [];
   var selectedCanvas = -1;
   var libraryIndex = 0;
-  var clock = new Clock (.82 * width, .2 * height, 25);
-  var nextImg = null;
+  var clock = new Clock (.82 * width, .2 * height, 180);
+  var nextImg = null, prevImg = null;
   var loading = false;
 
-  canvases[0] = new TagCanvas('UP', 'hola', wide, palette.createColor(2, 1));
-  canvases[1] = new TagCanvas('DOWN', 'adios', wide, palette.createColor(6,1));
-  canvases[2] = new TagCanvas('LEFT', 'otro', wide, palette.createColor(4, 1));
-  canvases[3] = new TagCanvas('RIGHT', 'ningun', wide, palette.createColor(10, 1));
+  selectedTags = selectTags();
+
+  canvases[0] = new TagCanvas('UP', selectedTags[0], wide, palette.createColor(2, 1));
+  canvases[1] = new TagCanvas('DOWN', selectedTags[1], wide, palette.createColor(6,1));
+  canvases[2] = new TagCanvas('LEFT', selectedTags[2], wide, palette.createColor(4, 1));
+  canvases[3] = new TagCanvas('RIGHT', selectedTags[3], wide, palette.createColor(10, 1));
 
   var backgroundColor = palette.createColor(6, 3);
   var yuriFox;
@@ -407,9 +429,10 @@ function GameScene(palette, libraryRecords) {
 
   loadImage('data/repo/' + libraryRecords[libraryIndex++].flickrid + '.jpg', function(img) {
     yuriFox = new LibrarianSprite(yuriAnimation, img, limits);
-    yuriFox.setY(height * .65);
+    yuriFox.setY(height * .7);
     yuriFox.setX(width - 50);
     ready = true;
+    prevImg = img;
   }, function(e) {console.log(e);});
 
   this.draw = function() {
@@ -421,13 +444,13 @@ function GameScene(palette, libraryRecords) {
     if (selectedCanvas != -1) {
       canvases[selectedCanvas].highlight();
     }
-    canvases.forEach(drawCanvas);
+    _.each(canvases, drawCanvas);
     clock.draw();
-
   };
 
   this.update = function() {
     if (clock.update()) {
+      _.each(canvases, updateCanvas);
       if (ready) {
         if (nextImg == null && !loading) {
           loading = true;
@@ -436,10 +459,7 @@ function GameScene(palette, libraryRecords) {
           });
         }
         if (!yuriFox.update()) {
-          yuriFox = new LibrarianSprite(yuriAnimation, nextImg, limits);
-          yuriFox.setY(height * .65);
-          yuriFox.setX(width - 50);
-          nextImg = null;
+          resetLibrarian();
         };
       }
       return this;
@@ -448,6 +468,16 @@ function GameScene(palette, libraryRecords) {
       return new IntroScene(palette);
     }
   };
+
+  function resetLibrarian() {
+    yuriFox = new LibrarianSprite(yuriAnimation, nextImg, limits);
+    yuriFox.setY(height * .7);
+    yuriFox.setX(width - 50);
+    yuriFox.setSpeed(-2);
+    prevImg = nextImg;
+    nextImg = null;
+
+  }
 
   this.start = function() {
     gameMusic.play();
@@ -478,9 +508,18 @@ function GameScene(palette, libraryRecords) {
     else {
       selectedCanvas = -1;
     }
-
     if ((keyWentDown('z') || keyWentDown('Z')) && selectedCanvas != -1) {
       actionSound.play();
+      canvases[selectedCanvas].addPicture(prevImg, yuriFox.getPictX(), yuriFox.getPictY());
+      resetLibrarian();
+    }
+    else if ((keyDown('z') || keyDown('Z')) && selectedCanvas == -1) {
+      yuriFox.setSpeed(-6);
+    }
+    else {
+      if (ready) {
+        yuriFox.setSpeed(-2);
+      }
     }
   };
 
@@ -488,16 +527,32 @@ function GameScene(palette, libraryRecords) {
     canvas.draw();
   }
 
+  function updateCanvas(canvas) {
+    canvas.update();
+  }
+
   function defaultLight(canvas) {
     canvas.defaultLight();
+  }
+
+  function selectTags() {
+    var aux = [];
+    while (aux.length < 4) {
+      var tag = tags[floor(random(tags.length - 1))];
+      if (aux.indexOf(tag) == -1) {
+        aux.push(tag);
+      }
+    }
+    return _.sortBy(aux, function(e) { return 1 / e.length; });
   }
 }
 
 function TagCanvas(position, tag, size, col) {
   var x, y, w, h;
-  var textX, textY;
+  var textX, textY, deltaX, deltaY;
 
   var wide = size;
+  var picturesLength = 0;
 
   switch (position) {
     case 'UP':
@@ -507,6 +562,8 @@ function TagCanvas(position, tag, size, col) {
       h = wide;
       textX = x + .8 * w;
       textY = y + .35 * h;
+      deltaX = wide + 0.5;
+      deltaY = 0;
       break;
     case 'DOWN':
       x = 0;
@@ -515,29 +572,44 @@ function TagCanvas(position, tag, size, col) {
       h = wide;
       textX = x + 0.02 * w;
       textY = y + 0.35 * h;
+      deltaX = wide + 0.5;
+      deltaY = 0;
       break;
     case 'LEFT':
       x = 0;
       y = 0;
       w = wide;
       h = height - wide;
-      textX = x + 0.3 * w;
+      textX = x + 0.1 * w;
       textY = y + 0.1 * h;
+      deltaX = 0;
+      deltaY = wide + 0.5;
       break;
     case 'RIGHT':
       x = width - wide;
       y = wide;
       h = height - wide;
       w = wide;
-      textX = x + 0.3 * w;
+      textX = x + 0.1 * w;
       textY = y + 0.95 * h;
+      deltaX = 0;
+      deltaY = wide + 0.5;
       break;
   }
+
+  var pictures = new Group();
 
   this.draw = function() {
     noStroke();
     fill(col.getColor());
     rect(x, y, w, h);
+
+    drawSprites(pictures);
+
+    textSize(32);
+    fill(col.copy().lighter().getColor());
+    text(tag, textX, textY);
+    noFill();
   };
 
   this.highlight = function() {
@@ -546,6 +618,33 @@ function TagCanvas(position, tag, size, col) {
 
   this.defaultLight = function() {
     col.luminance = 1;
+  };
+
+  this.addPicture = function(img, x, y) {
+    var sprite = createSprite(0, 0, img, img.width, img.height);
+    sprite.addImage('still', img);
+    sprite.changeAnimation('still');
+    sprite.position.x = x;
+    sprite.position.y = y;
+    sprite.depth = 200;
+    sprite.scale = .45;
+    pictures.add(sprite);
+    picturesLength++;
+  };
+
+  this.update = function() {
+    for (var i = 0; i < picturesLength; i++) {
+      var pic = pictures.get(i);
+      var px = 0.5 * wide + x + i * deltaX;
+      var py = 0.5 * wide + y + i * deltaY;
+      if (sqrt(sq(pic.position.x - px) + sq(pic.position.y - py)) < 100) {
+        pic.position.x = px;
+        pic.position.y = py;
+      }
+      else {
+        pic.attractionPoint(4, px, py);
+      }
+    }
   };
 }
 
