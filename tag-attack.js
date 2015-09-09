@@ -88,7 +88,7 @@ function IntroScene(palette) {
 
   function selectImageRecords() {
     imageRecords = _.reduce(BL_Collection, function(memo, collection, index) {
-      var n = index == 'UNTAGGED' ? 120 : 8;
+      var n = index == 'UNTAGGED' ? 20 : 2;
       for (var i = 0; i < n; i++) {
         memo.push(collection[floor(random(collection.length))]);
       }
