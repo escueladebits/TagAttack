@@ -113,7 +113,7 @@ function IntroScene(palette) {
   };
 
   this.keyboardManager = function() {
-    if (keyWentDown('z') || keyWentDown('Z')) {
+    if (keyWentDown(CONTROL)) {
       nextScene = new GameScene(palette, imageRecords);
     }
   };
@@ -508,17 +508,17 @@ function GameScene(palette, libraryRecords) {
     else {
       selectedCanvas = -1;
     }
-    if ((keyWentDown('z') || keyWentDown('Z')) && selectedCanvas != -1) {
-      actionSound.play();
-      canvases[selectedCanvas].addPicture(prevImg, yuriFox.getPictX(), yuriFox.getPictY());
-      resetLibrarian();
-    }
-    else if ((keyDown('z') || keyDown('Z')) && selectedCanvas == -1) {
-      yuriFox.setSpeed(-6);
-    }
-    else {
-      if (ready) {
-        yuriFox.setSpeed(-2);
+    if (ready) {
+      if (keyWentDown(CONTROL) && selectedCanvas != -1) {
+        actionSound.play();
+        canvases[selectedCanvas].addPicture(prevImg, yuriFox.getPictX(), yuriFox.getPictY());
+        resetLibrarian();
+      }
+      else if (keyDown(CONTROL) && selectedCanvas == -1) {
+        yuriFox.setSpeed(-6);
+      }
+      else {
+          yuriFox.setSpeed(-2);
       }
     }
   };
