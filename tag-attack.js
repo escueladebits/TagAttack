@@ -29,6 +29,7 @@ function preload() {
   arcadeFont = loadFont('data/04B_03__.ttf');
   introMusic = loadSound('data/Ozzed_-_Satisfucktion.mp3');
   gameMusic = loadSound('data/Ozzed_-_8-bit_Party.mp3');
+  gameOverMusic = loadSound('data/Ozzed_-_Termosdynamik.mp3');
   actionSound = loadSound('data/Pickup_Coin14.wav');
   explosionSound = loadSound('data/Explosion2.wav');
   newCanvasSound = loadSound('data/Randomize7.wav');
@@ -324,11 +325,21 @@ function LibrarianSprite(animation, picture, limits) {
     return true;
   };
 
+  this.getX = function() {
+    return character.position.x;
+  };
+
+  this.stop = function() {
+    this.setSpeed(0);
+    character.changeAnimation('stop');
+  };
+
   function setupCharacter(animation) {
     var character = createSprite(-100, -100, animation.getFrameImage().width, animation.getFrameImage().height);
     character.scale = 2;
     character.position.x = width * .5;
     character.addAnimation('walking', animation);
+    character.addImage('stop', animation.getImageAt(1));
     character.depth = 100;
     return character;
   }
@@ -422,6 +433,7 @@ function GameScene(palette, libraryRecords) {
   var performanceRatio = 1;
   var maxPerformanceRatio = 1;
   var untagged = 0;
+  var warn = 0, taggedItems = 0;
 
   selectedTags = selectTags();
 
@@ -479,7 +491,7 @@ function GameScene(palette, libraryRecords) {
       console.log('GAME OVER');
       console.log('final performance: ' + performanceRatio);
       console.log('max performance: ' + maxPerformanceRatio);
-      return new IntroScene(palette);
+      return new GameOverScene(palette, maxPerformanceRatio, warn, taggedItems);
     }
   };
 
@@ -525,6 +537,7 @@ function GameScene(palette, libraryRecords) {
     if (ready) {
       if (keyWentDown(CONTROL) && selectedCanvas != -1) {
         actionSound.play();
+        taggedItems++;
         if (prevLibraryItem.tag != 'UNTAGGED') {
           if (canvases[selectedCanvas].getTag() == prevLibraryItem.tag) {
             performanceRatio++;
@@ -532,6 +545,7 @@ function GameScene(palette, libraryRecords) {
           }
           else {
             performanceRatio = performanceRatio > 1 ? floor(performanceRatio / 2) : 1;
+            warn++;
             explosionSound.play();
           }
         }
@@ -563,7 +577,6 @@ function GameScene(palette, libraryRecords) {
       }
       selectedTags.push(tag);
       var directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
-      //new TagCanvas('UP', selectedTags[0], wide, palette.createColor(2, 1));
       canvases[i] = new TagCanvas(directions[i], tag, wide, palette.createColor(i, 1));
     }
   }
@@ -743,4 +756,85 @@ function BL_Image(csv) {
   this.small = data[4];
   this.medium = data[5];
   this.large = data[6];
+}
+
+function GameOverScene(palette, perf, w, it) {
+
+  var backgroundColor = palette.createColor(6, 2);
+  var fakeBackgroundColor = palette.createColor(8, 3);
+  var fakeBackground = createImage(width * .7, height * .8);
+  var nextScene = this;
+
+  fakeBackground.loadPixels();
+  for (var i = 0; i < fakeBackground.width; i++) {
+    for (var j = 0; j < fakeBackground.height; j++) {
+    fakeBackground.set(i, j, fakeBackgroundColor.getColor());
+    }
+  }
+  fakeBackground.updatePixels();
+  var limits = new GroundLimitsSprite();
+  var yuriFox = new LibrarianSprite(yuriAnimation, fakeBackground, limits);
+  image(fakeBackground, 0, 0);
+  yuriFox.setY(height * .9);
+  yuriFox.setX(width - 50);
+
+  this.draw = function() {
+    background(backgroundColor.getColor());
+    yuriFox.draw();
+    displayTitle();
+    displayScore();
+  };
+
+  function displayTitle() {
+    var msg = 'Game Over';
+    noStroke();
+    textSize(72);
+    text(msg, yuriFox.getX() - textWidth(msg) * .5, height * .18);
+  }
+
+  function displayScore() {
+    noStroke();
+
+    fullCanvases1 = 'Overall Performance: ';
+    fullCanvases2 =  perf + ' x 100 = ' + 100 * perf;
+    textSize(32);
+    text(fullCanvases1 + "\n" + fullCanvases2, yuriFox.getX() - width * .3, height * .30);
+
+    warnings = 'Warnings: \n-' + w + ' x 15 = -' + 15 * w;
+    text(warnings, yuriFox.getX() - width * .3, height * .42);
+
+    items = 'Total items: \n' + it + ' x 2 = ' + it * 2;
+    text(items, yuriFox.getX() - width * .3, height * .54);
+
+    score = perf * 100 + it * 2 - w * 15;
+    total = 'Total: \n' + 100 * perf + ' + ' + 2 * it + ' - ' + 15 * w + ' = ' + score;
+    textSize(45);
+    text(total, yuriFox.getX() - width * .3, height * .72);
+  }
+
+  this.update = function() {
+    yuriFox.update();
+    if (yuriFox.getX() - width * .5 < 2) {
+      yuriFox.stop();
+    };
+    return nextScene;
+  };
+
+  this.start = function() {
+    gameOverMusic.play();
+  };
+
+  this.stop = function() {
+    gameOverMusic.stop();
+  };
+
+  this.pause = function() {
+    gameOverMusic.stop();
+  };
+
+  this.keyboardManager = function() {
+    if (keyWentDown(CONTROL)) {
+      nextScene = new IntroScene(palette);
+    }
+  };
 }
