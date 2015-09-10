@@ -31,6 +31,7 @@ function preload() {
   gameMusic = loadSound('data/Ozzed_-_8-bit_Party.mp3');
   actionSound = loadSound('data/Pickup_Coin14.wav');
   explosionSound = loadSound('data/Explosion2.wav');
+  newCanvasSound = loadSound('data/Randomize7.wav');
   sampleset = loadStrings('data/sampleset.csv');
 }
 
@@ -553,8 +554,18 @@ function GameScene(palette, libraryRecords) {
     canvas.draw();
   }
 
-  function updateCanvas(canvas) {
-    canvas.update();
+  function updateCanvas(canvas, i) {
+    if (!canvas.update()) {
+      newCanvasSound.play();
+      var tag = 'UNTAGGED';
+      while (tag == 'UNTAGGED' || selectedTags.indexOf(tag) != -1) {
+        tag = tags[floor(random(tags.length))];
+      }
+      selectedTags.push(tag);
+      var directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+      //new TagCanvas('UP', selectedTags[0], wide, palette.createColor(2, 1));
+      canvases[i] = new TagCanvas(directions[i], tag, wide, palette.createColor(i, 1));
+    }
   }
 
   function defaultLight(canvas) {
@@ -589,6 +600,7 @@ function TagCanvas(position, tag, size, col) {
 
   var wide = size;
   var picturesLength = 0;
+  var maxPictures;
 
   switch (position) {
     case 'UP':
@@ -600,6 +612,7 @@ function TagCanvas(position, tag, size, col) {
       textY = y + .35 * h;
       deltaX = wide + 0.5;
       deltaY = 0;
+      maxPictures = 5;
       break;
     case 'DOWN':
       x = 0;
@@ -610,6 +623,7 @@ function TagCanvas(position, tag, size, col) {
       textY = y + 0.35 * h;
       deltaX = wide + 0.5;
       deltaY = 0;
+      maxPictures = 5;
       break;
     case 'LEFT':
       x = 0;
@@ -620,6 +634,7 @@ function TagCanvas(position, tag, size, col) {
       textY = y + 0.1 * h;
       deltaX = 0;
       deltaY = wide + 0.5;
+      maxPictures = 4;
       break;
     case 'RIGHT':
       x = width - wide;
@@ -630,6 +645,7 @@ function TagCanvas(position, tag, size, col) {
       textY = y + 0.95 * h;
       deltaX = 0;
       deltaY = wide + 0.5;
+      maxPictures = 4;
       break;
   }
 
@@ -681,6 +697,7 @@ function TagCanvas(position, tag, size, col) {
         pic.attractionPoint(4, px, py);
       }
     }
+    return picturesLength < maxPictures;
   };
 
   this.getTag = function() {
