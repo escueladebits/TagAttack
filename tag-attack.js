@@ -29,8 +29,10 @@ function preload() {
   arcadeFont = loadFont('data/04B_03__.ttf');
   introMusic = loadSound('data/Ozzed_-_Satisfucktion.mp3');
   gameMusic = loadSound('data/Ozzed_-_8-bit_Party.mp3');
+  gameOverMusic = loadSound('data/Ozzed_-_Termosdynamik.mp3');
   actionSound = loadSound('data/Pickup_Coin14.wav');
-
+  explosionSound = loadSound('data/Explosion2.wav');
+  newCanvasSound = loadSound('data/Randomize7.wav');
   sampleset = loadStrings('data/sampleset.csv');
 }
 
@@ -323,11 +325,21 @@ function LibrarianSprite(animation, picture, limits) {
     return true;
   };
 
+  this.getX = function() {
+    return character.position.x;
+  };
+
+  this.stop = function() {
+    this.setSpeed(0);
+    character.changeAnimation('stop');
+  };
+
   function setupCharacter(animation) {
     var character = createSprite(-100, -100, animation.getFrameImage().width, animation.getFrameImage().height);
     character.scale = 2;
     character.position.x = width * .5;
     character.addAnimation('walking', animation);
+    character.addImage('stop', animation.getImageAt(1));
     character.depth = 100;
     return character;
   }
@@ -415,6 +427,14 @@ function GameScene(palette, libraryRecords) {
   var nextImg = null, prevImg = null;
   var loading = false;
 
+  var taggedRecords = _.filter(libraryRecords, function(r) { return r.tag != 'UNTAGGED'; });
+  var untaggedRecords = _.filter(libraryRecords, function(r) { return r.tag == 'UNTAGGED'; });
+
+  var performanceRatio = 1;
+  var maxPerformanceRatio = 1;
+  var untagged = 0;
+  var warn = 0, taggedItems = 0;
+
   selectedTags = selectTags();
 
   canvases[0] = new TagCanvas('UP', selectedTags[0], wide, palette.createColor(2, 1));
@@ -427,12 +447,14 @@ function GameScene(palette, libraryRecords) {
   var ready = false;
   var limits = new GroundLimitsSprite();
 
-  loadImage('data/repo/' + libraryRecords[libraryIndex++].flickrid + '.jpg', function(img) {
+  var prevLibraryItem, nextLibraryItem = getNextImgName();
+  loadImage('data/repo/' + nextLibraryItem.flickrid + '.jpg', function(img) {
     yuriFox = new LibrarianSprite(yuriAnimation, img, limits);
     yuriFox.setY(height * .7);
     yuriFox.setX(width - 50);
     ready = true;
     prevImg = img;
+    prevLibraryItem = nextLibraryItem;
   }, function(e) {console.log(e);});
 
   this.draw = function() {
@@ -454,7 +476,8 @@ function GameScene(palette, libraryRecords) {
       if (ready) {
         if (nextImg == null && !loading) {
           loading = true;
-          nextImg = loadImage('data/repo/' + libraryRecords[libraryIndex++].flickrid + '.jpg', function(img) {
+          nextLibraryItem = getNextImgName();
+          nextImg = loadImage('data/repo/' + nextLibraryItem.flickrid + '.jpg', function(img) {
             loading = false;
           });
         }
@@ -465,7 +488,10 @@ function GameScene(palette, libraryRecords) {
       return this;
     }
     else {
-      return new IntroScene(palette);
+      console.log('GAME OVER');
+      console.log('final performance: ' + performanceRatio);
+      console.log('max performance: ' + maxPerformanceRatio);
+      return new GameOverScene(palette, maxPerformanceRatio, warn, taggedItems);
     }
   };
 
@@ -475,8 +501,8 @@ function GameScene(palette, libraryRecords) {
     yuriFox.setX(width - 50);
     yuriFox.setSpeed(-6);
     prevImg = nextImg;
+    prevLibraryItem = nextLibraryItem;
     nextImg = null;
-
   }
 
   this.start = function() {
@@ -511,6 +537,21 @@ function GameScene(palette, libraryRecords) {
     if (ready) {
       if (keyWentDown(CONTROL) && selectedCanvas != -1) {
         actionSound.play();
+        taggedItems++;
+        if (prevLibraryItem.tag != 'UNTAGGED') {
+          if (canvases[selectedCanvas].getTag() == prevLibraryItem.tag) {
+            performanceRatio++;
+            maxPerformanceRatio = max(performanceRatio, maxPerformanceRatio);
+          }
+          else {
+            performanceRatio = performanceRatio > 1 ? floor(performanceRatio / 2) : 1;
+            warn++;
+            explosionSound.play();
+          }
+        }
+        else {
+          // untagged item .... no evaluation possible
+        }
         canvases[selectedCanvas].addPicture(prevImg, yuriFox.getPictX(), yuriFox.getPictY());
         resetLibrarian();
       }
@@ -518,7 +559,7 @@ function GameScene(palette, libraryRecords) {
         yuriFox.setSpeed(-10);
       }
       else {
-          yuriFox.setSpeed(-6);
+        yuriFox.setSpeed(-6);
       }
     }
   };
@@ -527,8 +568,17 @@ function GameScene(palette, libraryRecords) {
     canvas.draw();
   }
 
-  function updateCanvas(canvas) {
-    canvas.update();
+  function updateCanvas(canvas, i) {
+    if (!canvas.update()) {
+      newCanvasSound.play();
+      var tag = 'UNTAGGED';
+      while (tag == 'UNTAGGED' || selectedTags.indexOf(tag) != -1) {
+        tag = tags[floor(random(tags.length))];
+      }
+      selectedTags.push(tag);
+      var directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+      canvases[i] = new TagCanvas(directions[i], tag, wide, palette.createColor(i, 1));
+    }
   }
 
   function defaultLight(canvas) {
@@ -545,6 +595,16 @@ function GameScene(palette, libraryRecords) {
     }
     return _.sortBy(aux, function(e) { return 1 / e.length; });
   }
+
+  function getNextImgName() {
+    if (untagged++ < performanceRatio) {
+      return untaggedRecords.shift();
+    }
+    else {
+      untagged = 0;
+      return taggedRecords.shift();
+    }
+  }
 }
 
 function TagCanvas(position, tag, size, col) {
@@ -553,6 +613,7 @@ function TagCanvas(position, tag, size, col) {
 
   var wide = size;
   var picturesLength = 0;
+  var maxPictures;
 
   switch (position) {
     case 'UP':
@@ -564,6 +625,7 @@ function TagCanvas(position, tag, size, col) {
       textY = y + .35 * h;
       deltaX = wide + 0.5;
       deltaY = 0;
+      maxPictures = 5;
       break;
     case 'DOWN':
       x = 0;
@@ -574,6 +636,7 @@ function TagCanvas(position, tag, size, col) {
       textY = y + 0.35 * h;
       deltaX = wide + 0.5;
       deltaY = 0;
+      maxPictures = 5;
       break;
     case 'LEFT':
       x = 0;
@@ -584,6 +647,7 @@ function TagCanvas(position, tag, size, col) {
       textY = y + 0.1 * h;
       deltaX = 0;
       deltaY = wide + 0.5;
+      maxPictures = 4;
       break;
     case 'RIGHT':
       x = width - wide;
@@ -594,6 +658,7 @@ function TagCanvas(position, tag, size, col) {
       textY = y + 0.95 * h;
       deltaX = 0;
       deltaY = wide + 0.5;
+      maxPictures = 4;
       break;
   }
 
@@ -645,7 +710,12 @@ function TagCanvas(position, tag, size, col) {
         pic.attractionPoint(4, px, py);
       }
     }
+    return picturesLength < maxPictures;
   };
+
+  this.getTag = function() {
+    return tag;
+  }
 }
 
 function Clock(x, y, lap) {
@@ -686,4 +756,85 @@ function BL_Image(csv) {
   this.small = data[4];
   this.medium = data[5];
   this.large = data[6];
+}
+
+function GameOverScene(palette, perf, w, it) {
+
+  var backgroundColor = palette.createColor(6, 2);
+  var fakeBackgroundColor = palette.createColor(8, 3);
+  var fakeBackground = createImage(width * .7, height * .8);
+  var nextScene = this;
+
+  fakeBackground.loadPixels();
+  for (var i = 0; i < fakeBackground.width; i++) {
+    for (var j = 0; j < fakeBackground.height; j++) {
+    fakeBackground.set(i, j, fakeBackgroundColor.getColor());
+    }
+  }
+  fakeBackground.updatePixels();
+  var limits = new GroundLimitsSprite();
+  var yuriFox = new LibrarianSprite(yuriAnimation, fakeBackground, limits);
+  image(fakeBackground, 0, 0);
+  yuriFox.setY(height * .9);
+  yuriFox.setX(width - 50);
+
+  this.draw = function() {
+    background(backgroundColor.getColor());
+    yuriFox.draw();
+    displayTitle();
+    displayScore();
+  };
+
+  function displayTitle() {
+    var msg = 'Game Over';
+    noStroke();
+    textSize(72);
+    text(msg, yuriFox.getX() - textWidth(msg) * .5, height * .18);
+  }
+
+  function displayScore() {
+    noStroke();
+
+    fullCanvases1 = 'Overall Performance: ';
+    fullCanvases2 =  perf + ' x 100 = ' + 100 * perf;
+    textSize(32);
+    text(fullCanvases1 + "\n" + fullCanvases2, yuriFox.getX() - width * .3, height * .30);
+
+    warnings = 'Warnings: \n-' + w + ' x 15 = -' + 15 * w;
+    text(warnings, yuriFox.getX() - width * .3, height * .42);
+
+    items = 'Total items: \n' + it + ' x 2 = ' + it * 2;
+    text(items, yuriFox.getX() - width * .3, height * .54);
+
+    score = perf * 100 + it * 2 - w * 15;
+    total = 'Total: \n' + 100 * perf + ' + ' + 2 * it + ' - ' + 15 * w + ' = ' + score;
+    textSize(45);
+    text(total, yuriFox.getX() - width * .3, height * .72);
+  }
+
+  this.update = function() {
+    yuriFox.update();
+    if (yuriFox.getX() - width * .5 < 2) {
+      yuriFox.stop();
+    };
+    return nextScene;
+  };
+
+  this.start = function() {
+    gameOverMusic.play();
+  };
+
+  this.stop = function() {
+    gameOverMusic.stop();
+  };
+
+  this.pause = function() {
+    gameOverMusic.stop();
+  };
+
+  this.keyboardManager = function() {
+    if (keyWentDown(CONTROL)) {
+      nextScene = new IntroScene(palette);
+    }
+  };
 }
