@@ -82,20 +82,8 @@ function IntroScene(palette) {
   var textColor = palette.createColor(floor(random(1,12)), 1);
   var limits = new GroundLimitsSprite();
   var yuriFox = new LibrarianSprite(yuriAnimation, pictureImages[0], limits);
-  var imagesRecords = selectImageRecords();;
 
   yuriFox.setY(height * .85);
-
-  function selectImageRecords() {
-    imageRecords = _.reduce(BL_Collection, function(memo, collection, index) {
-      var n = index == 'UNTAGGED' ? 120 : 8;
-      for (var i = 0; i < n; i++) {
-        memo.push(collection[floor(random(collection.length))]);
-      }
-      return memo;
-    }, []);
-    imageRecords = _.sortBy(imageRecords, function() { return random(); });
-  }
 
   this.draw = function() {
     background(backgroundColor.getColor());
@@ -116,7 +104,7 @@ function IntroScene(palette) {
 
   this.keyboardManager = function() {
     if (keyWentDown(CONTROL)) {
-      nextScene = new GameScene(palette, imageRecords);
+      nextScene = new GameScene(palette);
     }
   };
 
@@ -418,7 +406,7 @@ function PaletteScene(palette) {
   };
 }
 
-function GameScene(palette, libraryRecords) {
+function GameScene(palette) {
   var wide = .15 * width;
   var canvases = [];
   var selectedCanvas = -1;
@@ -427,8 +415,22 @@ function GameScene(palette, libraryRecords) {
   var nextImg = null, prevImg = null;
   var loading = false;
 
-  var taggedRecords = _.filter(libraryRecords, function(r) { return r.tag != 'UNTAGGED'; });
-  var untaggedRecords = _.filter(libraryRecords, function(r) { return r.tag == 'UNTAGGED'; });
+  var taggedRecords = _.sortBy(_.reduce(BL_Collection, function(memo, collection, i) {
+                        if (i != 'UNTAGGED') {
+                          return memo.concat(collection);
+                        }
+                        else {
+                          return memo;
+                        }
+                      }, []), function() { return random(); });
+  var untaggedRecords = _.sortBy(_.reduce(BL_Collection, function(memo, collection, i) {
+                        if (i == 'UNTAGGED') {
+                          return memo.concat(collection);
+                        }
+                        else {
+                          return memo;
+                        }
+                      }, []), function() { return random(); });
 
   var performanceRatio = 1;
   var maxPerformanceRatio = 1;
