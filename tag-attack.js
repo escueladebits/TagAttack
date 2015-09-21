@@ -33,7 +33,7 @@ function preload() {
   actionSound = loadSound('data/Pickup_Coin14.wav');
   explosionSound = loadSound('data/Explosion2.wav');
   newCanvasSound = loadSound('data/Randomize7.wav');
-  sampleset = loadStrings('data/sampleset.csv');
+  sampleset = loadStrings('data/sampleset_http.csv');
 }
 
 function setup() {
@@ -98,7 +98,9 @@ function IntroScene(palette) {
   };
 
   this.update = function() {
-    yuriFox.update();
+    if (!yuriFox.update()) {
+      yuriFox.flip();
+    };
     return nextScene;
   };
 
@@ -307,7 +309,6 @@ function LibrarianSprite(animation, picture, limits) {
 
   this.update = function() {
     if (limits.collide(character)) {
-       flip();
        return false;
     }
     return true;
@@ -342,7 +343,7 @@ function LibrarianSprite(animation, picture, limits) {
     return item;
   }
 
-  function flip() {
+  this.flip = function() {
     character.velocity.x = - character.velocity.x;
     item.velocity.x = -item.velocity.x;
     character.mirrorX(-character.mirrorX());
@@ -450,7 +451,7 @@ function GameScene(palette) {
   var limits = new GroundLimitsSprite();
 
   var prevLibraryItem, nextLibraryItem = getNextImgName();
-  loadImage('data/repo/' + nextLibraryItem.flickrid + '.jpg', function(img) {
+  loadImage(nextLibraryItem.localFilename(), function(img) {
     yuriFox = new LibrarianSprite(yuriAnimation, img, limits);
     yuriFox.setY(height * .7);
     yuriFox.setX(width - 50);
@@ -479,7 +480,8 @@ function GameScene(palette) {
         if (nextImg == null && !loading) {
           loading = true;
           nextLibraryItem = getNextImgName();
-          nextImg = loadImage('data/repo/' + nextLibraryItem.flickrid + '.jpg', function(img) {
+          loadImage(nextLibraryItem.localFilename(), function(img) {
+            nextImg = img;
             loading = false;
           });
         }
@@ -498,13 +500,15 @@ function GameScene(palette) {
   };
 
   function resetLibrarian() {
-    yuriFox = new LibrarianSprite(yuriAnimation, nextImg, limits);
-    yuriFox.setY(height * .7);
-    yuriFox.setX(width - 50);
-    yuriFox.setSpeed(-6);
-    prevImg = nextImg;
-    prevLibraryItem = nextLibraryItem;
-    nextImg = null;
+    if (nextImg != null) {
+      yuriFox = new LibrarianSprite(yuriAnimation, nextImg, limits);
+      yuriFox.setY(height * .7);
+      yuriFox.setX(width - 50);
+      yuriFox.setSpeed(-6);
+      prevImg = nextImg;
+      prevLibraryItem = nextLibraryItem;
+      nextImg = null;
+    }
   }
 
   this.start = function() {
@@ -758,6 +762,11 @@ function BL_Image(csv) {
   this.small = data[4];
   this.medium = data[5];
   this.large = data[6];
+
+  this.localFilename = function() {
+    return this.small;
+    //return 'data/repo/' + this.flickrid + '.jpg';
+  }
 }
 
 function GameOverScene(palette, perf, w, it) {
