@@ -33,7 +33,7 @@ function preload() {
   actionSound = loadSound('data/Pickup_Coin14.wav');
   explosionSound = loadSound('data/Explosion2.wav');
   newCanvasSound = loadSound('data/Randomize7.wav');
-  sampleset = loadStrings('data/sampleset_http.csv');
+  sampleset = loadStrings('data/sampleset.csv');
 }
 
 function setup() {
@@ -450,15 +450,24 @@ function GameScene(palette) {
   var ready = false;
   var limits = new GroundLimitsSprite();
 
-  var prevLibraryItem, nextLibraryItem = getNextImgName();
-  loadImage(nextLibraryItem.localFilename(), function(img) {
-    yuriFox = new LibrarianSprite(yuriAnimation, img, limits);
-    yuriFox.setY(height * .7);
-    yuriFox.setX(width - 50);
-    ready = true;
-    prevImg = img;
-    prevLibraryItem = nextLibraryItem;
-  }, function(e) {console.log(e);});
+  function loadInitialPicture() {
+    loadImage(nextLibraryItem.small, function(img) {
+      yuriFox = new LibrarianSprite(yuriAnimation, img, limits);
+      yuriFox.setY(height * .7);
+      yuriFox.setX(width - 50);
+      ready = true;
+      prevImg = img;
+      prevLibraryItem = nextLibraryItem;
+    }, function(e) {
+      console.log(e);
+      pushImage(nextLibraryItem);
+      nextLibraryItem = getNextImage();
+      loadInitialPicture();
+    });
+  }
+
+  var prevLibraryItem, nextLibraryItem = getNextImage();
+  loadInitialPicture();
 
   this.draw = function() {
     background(backgroundColor.getColor());
@@ -473,17 +482,26 @@ function GameScene(palette) {
     clock.draw();
   };
 
+  function loadNextImage() {
+    loadImage(nextLibraryItem.small, function(img) {
+      nextImg = img;
+      loading = false;
+    }, function(e) {
+      console.log(e);
+      pushImage(nextLibraryItem);
+      nextLibraryItem = getNextImage();
+      loadNextImage();
+    });
+  }
+
   this.update = function() {
     if (clock.update()) {
       _.each(canvases, updateCanvas);
       if (ready) {
         if (nextImg == null && !loading) {
           loading = true;
-          nextLibraryItem = getNextImgName();
-          loadImage(nextLibraryItem.localFilename(), function(img) {
-            nextImg = img;
-            loading = false;
-          });
+          nextLibraryItem = getNextImage();
+          loadNextImage();
         }
         if (!yuriFox.update()) {
           resetLibrarian();
@@ -602,13 +620,22 @@ function GameScene(palette) {
     return _.sortBy(aux, function(e) { return 1 / e.length; });
   }
 
-  function getNextImgName() {
+  function getNextImage() {
     if (untagged++ < performanceRatio) {
       return untaggedRecords.shift();
     }
     else {
       untagged = 0;
       return taggedRecords.shift();
+    }
+  }
+
+  function pushImage(img) {
+    if (img.tag == 'UNTAGGED') {
+      untaggedRecords.push(img);
+    }
+    else {
+      taggedRecords.push(img);
     }
   }
 }
@@ -763,10 +790,6 @@ function BL_Image(csv) {
   this.medium = data[5];
   this.large = data[6];
 
-  this.localFilename = function() {
-    return this.small;
-    //return 'data/repo/' + this.flickrid + '.jpg';
-  }
 }
 
 function GameOverScene(palette, perf, w, it) {
