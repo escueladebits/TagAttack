@@ -17,6 +17,7 @@
 
 var currentScene, tunningScene;
 
+var local = false;
 var yuriAnimation;
 var pictureImages = [];
 var arcadeFont;
@@ -451,7 +452,7 @@ function GameScene(palette) {
   var limits = new GroundLimitsSprite();
 
   function loadInitialPicture() {
-    loadImage(nextLibraryItem.small, function(img) {
+    loadImage(nextLibraryItem.path(), function(img) {
       yuriFox = new LibrarianSprite(yuriAnimation, img, limits);
       yuriFox.setY(height * .7);
       yuriFox.setX(width - 50);
@@ -483,7 +484,7 @@ function GameScene(palette) {
   };
 
   function loadNextImage() {
-    loadImage(nextLibraryItem.small, function(img) {
+    loadImage(nextLibraryItem.path(), function(img) {
       nextImg = img;
       loading = false;
     }, function(e) {
@@ -790,6 +791,10 @@ function BL_Image(csv) {
   this.medium = data[5];
   this.large = data[6];
 
+  this.path = function() {
+    var p = local ? "data/repo_all/" + this.flickrid + ".jpg" : this.small;
+    return p;
+  };
 }
 
 function GameOverScene(palette, perf, w, it) {
