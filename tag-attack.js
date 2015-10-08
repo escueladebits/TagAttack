@@ -17,6 +17,9 @@
 
 var currentScene, tunningScene;
 
+var local = false;
+var ctx;
+
 var yuriAnimation;
 var pictureImages = [];
 var arcadeFont;
@@ -25,7 +28,6 @@ var BL_Collection, tags;
 
 function preload() {
   yuriAnimation = loadAnimation('data/yuriWalking_1.png', 'data/yuriWalking_4.png');
-  pictureImages[0] = loadImage('data/10997265356_0f8e16452f_q.jpg');
   arcadeFont = loadFont('data/04B_03__.ttf');
   introMusic = loadSound('data/Ozzed_-_Satisfucktion.mp3');
   gameMusic = loadSound('data/Ozzed_-_8-bit_Party.mp3');
@@ -36,8 +38,19 @@ function preload() {
   sampleset = loadStrings('data/sampleset.csv');
 }
 
+
+var feeder;
+var run;
+
 function setup() {
   createCanvas(800, 600);
+  run = false;
+  ctx = document.getElementById('defaultCanvas').getContext('2d');
+
+  pictureImages[0] = EDB.loadImageHTML('data/10997265356_0f8e16452f_q.jpg', function() {
+    run = true;
+  });
+
   noSmooth();
   initCollectionDictionary();
   var NES_Palette = new LuminancePalette('NES');
@@ -52,17 +65,22 @@ function initCollectionDictionary() {
   BL_Collection = _.map(sampleset, function(line) { return new BL_Image(line);});
   BL_Collection = _.groupBy(BL_Collection, 'tag');
   tags = _.map(BL_Collection, function(item) { return item[0].tag;});
+  feeder = new Feeder(BL_Collection);
 }
 
 function draw() {
-  keyboardManager();
-  var newScene = currentScene.update();
-  if (currentScene != newScene) {
-    currentScene.stop();
-    currentScene = newScene;
-    currentScene.start();
+  feeder.update();
+
+  if (run) {
+    keyboardManager();
+    var newScene = currentScene.update();
+    if (currentScene != newScene) {
+      currentScene.stop();
+      currentScene = newScene;
+      currentScene.start();
+    }
+    currentScene.draw();
   }
-  currentScene.draw();
 
   function keyboardManager() {
     if ((keyWentDown('r') || keyWentDown('R')) && currentScene != tunningScene) {
@@ -275,7 +293,6 @@ function LibrarianSprite(animation, picture, limits) {
   var character = setupCharacter(animation);
   var item = setupPicture(picture);
 
-  group.add(item);
   group.add(character);
   character.velocity.x = -2;
   item.velocity.x = -2;
@@ -297,6 +314,10 @@ function LibrarianSprite(animation, picture, limits) {
 
   this.draw = function() {
     drawSprites(group);
+    var w = item.scale * item.image.width;
+    var h = item.scale * item.image.height;
+
+    item.image.draw(ctx, item.position.x - w * .5, item.position.y - h * .5, w, h);
   };
 
   this.getPictX = function() {
@@ -311,6 +332,7 @@ function LibrarianSprite(animation, picture, limits) {
     if (limits.collide(character)) {
        return false;
     }
+    item.position.x += item.velocity.x;
     return true;
   };
 
@@ -334,12 +356,19 @@ function LibrarianSprite(animation, picture, limits) {
   }
 
   function setupPicture(picture) {
-    var item = createSprite(-100, -100, picture.width, picture.height);
-    item.addImage('still', picture);
-    item.changeAnimation('still');
-    item.position.x = character.position.x;
-    item.depth = 0;
-    item.scale = 1;
+    var item = {
+      image : picture,
+      position : {
+        x: character.position.x,
+        y: 0,
+      },
+      depth: 0,
+      scale: 1,
+      velocity : {
+        x: 0,
+        y : 0,
+      },
+    };
     return item;
   }
 
@@ -450,20 +479,13 @@ function GameScene(palette) {
   var ready = false;
   var limits = new GroundLimitsSprite();
 
-  function loadInitialPicture() {
-    loadImage(nextLibraryItem.small, function(img) {
-      yuriFox = new LibrarianSprite(yuriAnimation, img, limits);
+  function loadInitialPicture(img) {
+      yuriFox = new LibrarianSprite(yuriAnimation, nextLibraryItem.image, limits);
       yuriFox.setY(height * .7);
       yuriFox.setX(width - 50);
       ready = true;
-      prevImg = img;
+      prevImg = nextLibraryItem.picture;
       prevLibraryItem = nextLibraryItem;
-    }, function(e) {
-      console.log(e);
-      pushImage(nextLibraryItem);
-      nextLibraryItem = getNextImage();
-      loadInitialPicture();
-    });
   }
 
   var prevLibraryItem, nextLibraryItem = getNextImage();
@@ -501,7 +523,6 @@ function GameScene(palette) {
         if (nextImg == null && !loading) {
           loading = true;
           nextLibraryItem = getNextImage();
-          loadNextImage();
         }
         if (!yuriFox.update()) {
           resetLibrarian();
@@ -519,7 +540,7 @@ function GameScene(palette) {
 
   function resetLibrarian() {
     if (nextImg != null) {
-      yuriFox = new LibrarianSprite(yuriAnimation, nextImg, limits);
+      yuriFox = new LibrarianSprite(yuriAnimation, nextImg.image, limits);
       yuriFox.setY(height * .7);
       yuriFox.setX(width - 50);
       yuriFox.setSpeed(-6);
@@ -622,11 +643,20 @@ function GameScene(palette) {
 
   function getNextImage() {
     if (untagged++ < performanceRatio) {
-      return untaggedRecords.shift();
+      return feeder.getUntagged();
     }
     else {
       untagged = 0;
-      return taggedRecords.shift();
+      return feeder.getTagged();
+    }
+  }
+
+  function pushImage(img) {
+    if (img.tag == 'UNTAGGED') {
+      untaggedRecords.push(img);
+    }
+    else {
+      taggedRecords.push(img);
     }
   }
 
@@ -790,6 +820,14 @@ function BL_Image(csv) {
   this.medium = data[5];
   this.large = data[6];
 
+  this.ready = false;
+  this.image = null;
+  this.downloading = false;
+
+  this.path = function() {
+    var p = local ? "data/repo_all/" + this.flickrid + ".jpg" : this.small;
+    return p;
+  };
 }
 
 function GameOverScene(palette, perf, w, it) {
@@ -871,4 +909,95 @@ function GameOverScene(palette, perf, w, it) {
       nextScene = new IntroScene(palette);
     }
   };
+}
+
+function Feeder (collection) {
+  //var tags = _.map(BL_Collection, function(item) { return item[0].tag;});
+  var downloading = false;
+
+  var groupTags = function(col, condition) {
+    return _.reduce(col, function(memo, c, i) {
+      if (condition(i)) {
+        return memo.concat(c);
+      }
+      else {
+        return memo;
+      }
+    }, []);
+  };
+
+  var randomSort = function(col) {
+    return _.sortBy(col, function() { return random(); });
+  };
+
+  var taggedCollection = randomSort(groupTags(collection, function(t) { return t != 'UNTAGGED';}));
+  var untaggedCollection = randomSort(groupTags(collection, function(t) { return t == 'UNTAGGED';}));
+
+  this.available = function (type) {
+    var col = type == 'tagged' ? taggedCollection : untaggedCollection;
+
+    return _.filter(col, function(bl) { return bl.ready;}).length;
+  };
+
+  var downloadCollection = function(col, size) {
+    downloading = true;
+    var auxCol = _.filter(col, function(bl) { return bl.image == null;});
+    if (auxCol.length > size) {
+      auxCol = auxCol.splice(0, size);
+    }
+    _.each(auxCol, function(bl) {
+      bl.downloading = true;
+      bl.image = EDB.loadImageHTML(bl.path(), function(i) {
+         bl.ready = true;
+         bl.downloading = false;
+        // console.log('success: ' + bl.path());
+      }, function(e) {console.log('error');});
+    });
+  };
+
+  var countDownloads = function(type) {
+    var auxCol = type == 'tagged' ? taggedCollection : untaggedCollection;
+
+    return _.filter(auxCol, function(bl) { return bl.downloading;}).length;
+  };
+
+  this.update = function() {
+    if (this.available('tagged') < 100 && !downloading) {
+      downloadCollection(taggedCollection, 10);
+    }
+    if (this.available('untagged') < 100 && !downloading) {
+      downloadCollection(untaggedCollection, 10);
+    }
+    if (countDownloads('tagged') == 0 || countDownloads('untagged') == 0) {
+      if (downloading) {
+        taggedCollection = _.sortBy(taggedCollection, 'ready');
+        untaggedCollection = _.sortBy(untaggedCollection, 'ready');
+      }
+      downloading = false;
+    }
+  };
+
+  this.getTagged = function() {
+    return get('tagged');
+  };
+  this.getUntagged = function() {
+    return get('untagged');
+  };
+  var get = function(type) {
+    var auxCol = type == 'tagged' ? taggedCollection : untaggedCollection;
+
+    if (auxCol[0].ready) {
+      return auxCol.shift();
+    }
+    else {
+      return false;
+    }
+  };
+
+  this.push = function(bl) {
+    tags[bl.tag].push(bl);
+    var auxCol = bl.tag == 'UNTAGGED' ? untaggedCollection : taggedCollection;
+    auxCol.push(bl);
+  };
+
 }
