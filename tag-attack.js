@@ -38,6 +38,8 @@ function preload() {
   sampleset = loadStrings('data/sampleset_http.csv');
 }
 
+
+var feeder;
 var run;
 
 function setup() {
@@ -63,9 +65,12 @@ function initCollectionDictionary() {
   BL_Collection = _.map(sampleset, function(line) { return new BL_Image(line);});
   BL_Collection = _.groupBy(BL_Collection, 'tag');
   tags = _.map(BL_Collection, function(item) { return item[0].tag;});
+  feeder = new Feeder(BL_Collection);
 }
 
 function draw() {
+  feeder.update();
+
   if (run) {
     keyboardManager();
     var newScene = currentScene.update();
@@ -883,4 +888,95 @@ function GameOverScene(palette, perf, w, it) {
       nextScene = new IntroScene(palette);
     }
   };
+}
+
+function Feeder (collection) {
+  //var tags = _.map(BL_Collection, function(item) { return item[0].tag;});
+  var downloading = false;
+
+  var groupTags = function(col, condition) {
+    return _.reduce(col, function(memo, c, i) {
+      if (condition(i)) {
+        return memo.concat(c);
+      }
+      else {
+        return memo;
+      }
+    }, []);
+  };
+
+  var randomSort = function(col) {
+    return _.sortBy(col, function() { return random(); });
+  };
+
+  var taggedCollection = randomSort(groupTags(collection, function(t) { return t != 'UNTAGGED';}));
+  var untaggedCollection = randomSort(groupTags(collection, function(t) { return t == 'UNTAGGED';}));
+
+  this.available = function (type) {
+    var col = type == 'tagged' ? taggedCollection : untaggedCollection;
+
+    return _.filter(col, function(bl) { return bl.ready;}).length;
+  };
+
+  var downloadCollection = function(col, size) {
+    downloading = true;
+    var auxCol = _.filter(col, function(bl) { return bl.image == null;});
+    if (auxCol.length > size) {
+      auxCol = auxCol.splice(0, size);
+    }
+    _.each(auxCol, function(bl) {
+      bl.downloading = true;
+      bl.image = EDB.loadImageHTML(bl.path(), function(i) {
+         bl.ready = true;
+         bl.downloading = false;
+        // console.log('success: ' + bl.path());
+      }, function(e) {console.log('error');});
+    });
+  };
+
+  var countDownloads = function(type) {
+    var auxCol = type == 'tagged' ? taggedCollection : untaggedCollection;
+
+    return _.filter(auxCol, function(bl) { return bl.downloading;}).length;
+  };
+
+  this.update = function() {
+    if (this.available('tagged') < 100 && !downloading) {
+      downloadCollection(taggedCollection, 10);
+    }
+    if (this.available('untagged') < 100 && !downloading) {
+      downloadCollection(untaggedCollection, 10);
+    }
+    if (countDownloads('tagged') == 0 || countDownloads('untagged') == 0) {
+      if (downloading) {
+        taggedCollection = _.sortBy(taggedCollection, 'ready');
+        untaggedCollection = _.sortBy(untaggedCollection, 'ready');
+      }
+      downloading = false;
+    }
+  };
+
+  this.getTagged = function() {
+    return get('tagged');
+  };
+  this.getUntagged = function() {
+    return get('untagged');
+  };
+  var get = function(type) {
+    var auxCol = type == 'tagged' ? taggedCollection : untaggedCollection;
+
+    if (auxCol[0].ready) {
+      return auxCol.shift();
+    }
+    else {
+      return false;
+    }
+  };
+
+  this.push = function(bl) {
+    tags[bl.tag].push(bl);
+    var auxCol = bl.tag == 'UNTAGGED' ? untaggedCollection : taggedCollection;
+    auxCol.push(bl);
+  };
+
 }
