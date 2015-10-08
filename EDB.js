@@ -15,38 +15,45 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var EDB = {
+var EDB = (function() {
+  function Scene (p, width, height) {
+    this.width = width;
+    this.height = height;
+    this.p5 = p;
+  };
 
-  loadImageHTML : function(path, success, fail) {
-    function ImageHTML(width, height) {
-      this.img = null;
+  Scene.prototype.update = function() {
+    return this;
+  };
+  Scene.prototype.draw = function() {};
+  Scene.prototype.start = function() {};
+  Scene.prototype.stop = function() {};
+  Scene.prototype.keyboardManager = function() {};
 
-      this.draw = function(ctx, x, y, w, h) {
-        if (this.img != null) {
-          ctx.drawImage(this.img, x, y, w, h);
-        }
+  return {
+    createp5Game : function(scenes, mainScene) {
+      return function(p) {
+        var currentScene = mainScene !== undefined ? new scenes[mainScene](p) : new scenes[0](p);
+
+        p.setup = function() {
+          p.createCanvas(currentScene.width, currentScene.height);
+          currentScene.start();
+        };
+
+        p.draw = function() {
+          var newScene = currentScene.update();
+          if (newScene !== currentScene) {
+            currentScene.stop();
+            newScene.start();
+            currentScene = newScene;
+          }
+          else {
+            currentScene.draw();
+          }
+        };
       };
-    };
+    },
 
-    var img = new Image();
-    var edbImage = new ImageHTML();
-    edbImage.img = img;
-
-    img.onload = function(i) {
-      if (typeof success == 'function') {
-        success(i);
-      }
-    };
-
-    img.onerror = function(e) {
-      console.log('error downloading: ' + path);
-      if (typeof fail == 'function') {
-        fail(e);
-      }
-    };
-
-    img.src = path;
-
-    return edbImage;
-  },
-};
+    Scene : Scene,
+  };
+})();
