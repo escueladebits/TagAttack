@@ -19,13 +19,43 @@
   var GameScene = function(p) {
     EDB.Scene.call(this, p, 800, 600);
   };
-  GameScene.prototype = EDB.Scene.prototype;
+  GameScene.prototype = Object.create(EDB.Scene.prototype);
   GameScene.prototype.start = function() {
+    var game = this;
+    game.backgroundColor = game.p5.color(255, 0, 0);
 
+    game.sprite = EDB.createp5Sprite(game.p5);
+    game.sprite.init = function() {
+      this.position.x = 400;
+      this.position.y = 300;
+    };
+    game.sprite.init();
+    game.sprite.img = EDB.loadEDBImage('data/yuriWalking_1.png', function(i) {
+      game.addElement(game.sprite);
+    });
+    game.sprite.velocity.x = -2;
+    game.sprite.depth = 100;
+
+    var clock = EDB.createp5Element(game.p5);
+    clock.draw = function() {
+      game.p5.ellipse(this.position.x, this.position.y, 50, 50);
+    };
+    clock.position = {
+      x: game.p5.width * .5,
+      y: game.p5.height * .5,
+    };
+    game.addElement(clock);
   };
-  GameScene.prototype.draw = function() {
-    this.p5.background(255, 0, 0);
-  };
+  GameScene.prototype.update = function() {
+    var parentAnswer = EDB.Scene.prototype.update.call(this);
+    if (this.sprite.position.x <= 0) {
+      this.sprite.init();
+      this.sprite.depth = -1 * this.sprite.depth;
+      this.updateElements();
+    }
+    return this;
+  }
+
 
   var game = EDB.createp5Game([GameScene]);
   var myp5 = new p5(game);

@@ -16,16 +16,71 @@
 */
 
 var EDB = (function() {
+  function p5Element(p) {
+    this.p5 = p;
+
+    this.position = {
+      x : 0,
+      y : 0,
+    };
+    this.velocity = {
+      x : 0,
+      y : 0,
+    };
+    this.depth = 0;
+    this.scale = 1;
+  }
+  p5Element.prototype.update = function() {
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+  };
+  p5Element.prototype.draw = function() {};
+
+  function p5Sprite(p) {
+
+    p5Element.call(this, p);
+    this.img = null;
+
+    this.draw = function() {
+      if (this.img !== null) {
+        // TODO: use this.scale
+        this.p5.canvas.getContext('2d').drawImage(
+          this.img,
+          this.position.x, this.position.y,
+          this.img.width, this.img.height
+        );
+      }
+    };
+  }
+  p5Sprite.prototype = Object.create(p5Element.prototype);
+
   function Scene (p, width, height) {
     this.width = width;
     this.height = height;
     this.p5 = p;
+    this.backgroundColor = 0;
+
+    var elements = [];
+    this.addElement = function(e) {
+      elements.push(e);
+      this.updateElements();
+    };
+    this.getElements = function() {
+      return elements;
+    };
+    this.updateElements = function() {
+      elements = _.sortBy(elements, 'depth');
+    }
   };
 
   Scene.prototype.update = function() {
+    _.each(this.getElements(), function(e) { e.update();});
     return this;
   };
-  Scene.prototype.draw = function() {};
+  Scene.prototype.draw = function() {
+    this.p5.background(this.backgroundColor);
+    _.each(this.getElements(), function(e) { e.draw();});
+  };
   Scene.prototype.start = function() {};
   Scene.prototype.stop = function() {};
   Scene.prototype.keyboardManager = function() {};
@@ -55,6 +110,15 @@ var EDB = (function() {
     },
 
     Scene : Scene,
+
+    createp5Element : function(p) {
+      return new p5Element(p);
+    },
+
+    createp5Sprite : function(p) {
+      return new p5Sprite(p);
+    },
+
     loadEDBImage : function(path, success, fail) {
       var img = new Image();
 
