@@ -46,7 +46,8 @@ var EDB = (function() {
         // TODO: use this.scale
         this.p5.canvas.getContext('2d').drawImage(
           this.img,
-          this.position.x, this.position.y,
+          this.position.x - this.img.width * .5,
+          this.position.y - this.img.height * .5,
           this.img.width, this.img.height
         );
       }
