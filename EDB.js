@@ -55,5 +55,18 @@ var EDB = (function() {
     },
 
     Scene : Scene,
+    loadEDBImage : function(path, success, fail) {
+      var img = new Image();
+
+      img.onload = function(i) {
+        success(i);
+      };
+      img.onerror = function(e) {
+        fail(e);
+      };
+      img.src = path;
+
+      return img;
+    },
   };
 })();
