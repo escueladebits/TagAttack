@@ -16,9 +16,7 @@
 */
 
 var EDB = (function() {
-  function p5Element(p) {
-    this.p5 = p;
-
+  function p5Element() {
     this.position = {
       x : 0,
       y : 0,
@@ -34,21 +32,22 @@ var EDB = (function() {
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
   };
-  p5Element.prototype.draw = function() {};
+  p5Element.prototype.draw = function(p5) {};
 
-  function p5Sprite(p) {
-
-    p5Element.call(this, p);
+  function p5Sprite() {
+    p5Element.call(this);
     this.img = null;
 
-    this.draw = function() {
+    this.draw = function(p5) {
       if (this.img !== null) {
         // TODO: use this.scale
-        this.p5.canvas.getContext('2d').drawImage(
+        EDB.p5drawImage(
+          p5,
           this.img,
           this.position.x - this.img.width * .5,
           this.position.y - this.img.height * .5,
-          this.img.width, this.img.height
+          this.img.width,
+          this.img.height
         );
       }
     };
@@ -79,8 +78,9 @@ var EDB = (function() {
     return this;
   };
   Scene.prototype.draw = function() {
-    this.p5.background(this.backgroundColor);
-    _.each(this.getElements(), function(e) { e.draw();});
+    var p5 = this.p5;
+    p5.background(this.backgroundColor);
+    _.each(this.getElements(), function(e) { e.draw(p5);});
   };
   Scene.prototype.start = function() {};
   Scene.prototype.stop = function() {};
@@ -132,6 +132,12 @@ var EDB = (function() {
       img.src = path;
 
       return img;
+    },
+
+    p5drawImage : function(p5, img, x, y, w, h) {
+      w = w || img.width;
+      h = h || img.height;
+      p5.canvas.getContext('2d').drawImage(img, x, y, w, h);
     },
   };
 })();
