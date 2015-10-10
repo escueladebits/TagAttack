@@ -23,6 +23,7 @@
   GameScene.prototype.start = function() {
     var game = this;
     game.backgroundColor = game.p5.color(255, 0, 0);
+    game.p5.noSmooth();
 
     game.sprite = EDB.createp5Sprite();
     game.sprite.init = function() {
@@ -35,6 +36,7 @@
     });
     game.sprite.velocity.x = -2;
     game.sprite.depth = 100;
+    game.sprite.scale = 2;
 
     var clock = EDB.createp5Element();
     clock.draw = function(p5) {

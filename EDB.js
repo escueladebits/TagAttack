@@ -40,14 +40,15 @@ var EDB = (function() {
 
     this.draw = function(p5) {
       if (this.img !== null) {
-        // TODO: use this.scale
+        var w = this.img.width * this.scale,
+            h = this.img.height * this.scale;
         EDB.p5drawImage(
           p5,
           this.img,
-          this.position.x - this.img.width * .5,
-          this.position.y - this.img.height * .5,
-          this.img.width,
-          this.img.height
+          this.position.x - w * .5,
+          this.position.y - h * .5,
+          w,
+          h
         );
       }
     };
