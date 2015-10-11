@@ -113,13 +113,9 @@ var EDB = (function() {
 
     Scene : Scene,
 
-    createp5Element : function(p) {
-      return new p5Element(p);
-    },
+    p5Element : p5Element,
 
-    createp5Sprite : function(p) {
-      return new p5Sprite(p);
-    },
+    p5Sprite : p5Sprite,
 
     loadEDBImage : function(path) {
 

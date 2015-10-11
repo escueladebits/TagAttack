@@ -25,7 +25,7 @@
     game.backgroundColor = game.p5.color(255, 0, 0);
     game.p5.noSmooth();
 
-    game.sprite = EDB.createp5Sprite();
+    game.sprite = new EDB.p5Sprite();
     game.sprite.init = function() {
       this.position.x = 400;
       this.position.y = 300;
@@ -40,7 +40,7 @@
     game.sprite.depth = 100;
     game.sprite.scale = 2;
 
-    game.picture = EDB.createp5Sprite();
+    game.picture = new EDB.p5Sprite();
     game.picture.position = {
       x : 600, y : 200,
     };
@@ -51,7 +51,7 @@
     });
     game.picture.growing = false;
 
-    var clock = EDB.createp5Element();
+    var clock = new EDB.p5Element();
     clock.draw = function(p5) {
       p5.ellipse(this.position.x, this.position.y, 50, 50);
     };
