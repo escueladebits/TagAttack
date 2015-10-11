@@ -121,18 +121,21 @@ var EDB = (function() {
       return new p5Sprite(p);
     },
 
-    loadEDBImage : function(path, success, fail) {
-      var img = new Image();
+    loadEDBImage : function(path) {
 
-      img.onload = function(i) {
-        success(i);
-      };
-      img.onerror = function(e) {
-        fail(e);
-      };
-      img.src = path;
+      var promise = new Promise( function(resolve, reject) {
+        var img = new Image();
 
-      return img;
+        img.onload = function(i) {
+          resolve(img);
+        };
+        img.onerror = function(e) {
+          reject(e);
+        };
+        img.src = path;
+      });
+
+      return promise;
     },
 
     p5drawImage : function(p5, img, x, y, w, h) {
