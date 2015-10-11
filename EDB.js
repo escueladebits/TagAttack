@@ -38,22 +38,42 @@ var EDB = (function() {
     p5Element.call(this);
     this.img = null;
 
-    this.draw = function(p5) {
-      if (this.img !== null) {
-        var w = this.img.width * this.scale,
-            h = this.img.height * this.scale;
-        EDB.p5drawImage(
-          p5,
-          this.img,
-          this.position.x - w * .5,
-          this.position.y - h * .5,
-          w,
-          h
-        );
-      }
-    };
+    this.animation = [];
+    this.animationIndex = -1;
   }
   p5Sprite.prototype = Object.create(p5Element.prototype);
+  p5Sprite.prototype.draw = function(p5) {
+    if (this.img !== null) {
+      var w = this.img.width * this.scale,
+          h = this.img.height * this.scale;
+      EDB.p5drawImage(
+        p5,
+        this.img,
+        this.position.x - w * .5,
+        this.position.y - h * .5,
+        w,
+        h
+      );
+    }
+  };
+  p5Sprite.prototype.loadAnimation = function(paths) {
+    var sprite = this;
+    return Promise.all(_.map(paths, EDB.loadEDBImage)).then(function(images) {
+      sprite.animation = images;
+      sprite.animationIndex = 0;
+    });
+  };
+
+  p5Sprite.prototype.update = function() {
+    p5Element.prototype.update.call(this);
+    if (this.animationIndex > -1) {
+      this.animationIndex++;
+      if (this.animationIndex >= this.animation.length) {
+        this.animationIndex = 0;
+      }
+      this.img = this.animation[this.animationIndex];
+    }
+  };
 
   function Scene (p, width, height) {
     this.width = width;
@@ -87,6 +107,22 @@ var EDB = (function() {
   Scene.prototype.stop = function() {};
   Scene.prototype.keyboardManager = function() {};
 
+  function loadEDBImage(path) {
+    var promise = new Promise( function(resolve, reject) {
+      var img = new Image();
+
+      img.onload = function(i) {
+        resolve(img);
+      };
+      img.onerror = function(e) {
+        reject(e);
+      };
+      img.src = path;
+    });
+
+    return promise;
+  }
+
   return {
     createp5Game : function(scenes, mainScene) {
       return function(p) {
@@ -117,22 +153,7 @@ var EDB = (function() {
 
     p5Sprite : p5Sprite,
 
-    loadEDBImage : function(path) {
-
-      var promise = new Promise( function(resolve, reject) {
-        var img = new Image();
-
-        img.onload = function(i) {
-          resolve(img);
-        };
-        img.onerror = function(e) {
-          reject(e);
-        };
-        img.src = path;
-      });
-
-      return promise;
-    },
+    loadEDBImage : loadEDBImage,
 
     p5drawImage : function(p5, img, x, y, w, h) {
       w = w || img.width;

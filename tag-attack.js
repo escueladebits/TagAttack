@@ -31,14 +31,20 @@
       this.position.y = 300;
     };
     game.sprite.init();
-    EDB.loadEDBImage('data/yuriWalking_1.png')
-      .then(function(i) {
-        game.sprite.img = i;
-        game.addElement(game.sprite);
-    });
     game.sprite.velocity.x = -2;
     game.sprite.depth = 100;
     game.sprite.scale = 2;
+
+    var paths = [
+      'data/yuriWalking_1.png',
+      'data/yuriWalking_2.png',
+      'data/yuriWalking_3.png',
+      'data/yuriWalking_4.png',
+    ];
+    game.sprite.loadAnimation(paths).
+    then(function(i) {
+      game.addElement(game.sprite);
+    });
 
     game.picture = new EDB.p5Sprite();
     game.picture.position = {
