@@ -38,6 +38,15 @@
     game.sprite.depth = 100;
     game.sprite.scale = 2;
 
+    game.picture = EDB.createp5Sprite();
+    game.picture.position = {
+      x : 600, y : 200,
+    };
+    game.picture.img = EDB.loadEDBImage(Flickr.Feeder.getTagged().path(), function(i) {
+      game.addElement(game.picture);
+    });
+    game.picture.growing = false;
+
     var clock = EDB.createp5Element();
     clock.draw = function(p5) {
       p5.ellipse(this.position.x, this.position.y, 50, 50);
@@ -55,6 +64,13 @@
       this.sprite.depth = -1 * this.sprite.depth;
       this.updateElements();
     }
+    if (this.picture.scale >=1 && this.picture.growing) {
+      this.picture.growing = false;
+    }
+    if (this.picture.scale <= .5 && !this.picture.growing) {
+      this.picture.growing = true;
+    }
+    this.picture.scale += this.picture.growing ? .02: -.02;
     return this;
   }
 
