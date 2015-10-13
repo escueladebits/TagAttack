@@ -26,6 +26,52 @@
     game.p5.noSmooth();
     game.p5.frameRate(24);
 
+    function TagCanvasElement(tag, color) {
+      EDB.p5Element.call(this);
+      this.width = this.height;
+      this.backgroundColor = color;
+      this.depth = 10;
+    }
+    TagCanvasElement.prototype = Object.create(EDB.p5Element.prototype);
+    TagCanvasElement.prototype.draw = function(p5) {
+      p5.fill(this.backgroundColor);
+      p5.noStroke();
+      p5.rect(this.position.x, this.position.y, this.width, this.height);
+    };
+    function TagCanvasTop(tag, color) {
+      TagCanvasElement.call(this, tag, color);
+      this.width = .82 * game.p5.width;
+      this.height = .18 * game.p5.height;
+      this.position.x = game.p5.width - this.width;
+      this.position.y = 0;
+    }
+    TagCanvasTop.prototype = Object.create(TagCanvasElement.prototype);
+    function TagCanvasBottom(tag, color) {
+      TagCanvasTop.call(this, tag, color);
+      this.position.x = 0;
+      this.position.y = game.p5.height - this.height;
+    }
+    TagCanvasBottom.prototype = Object.create(TagCanvasTop.prototype);
+    function TagCanvasLeft(tag, color) {
+      TagCanvasElement.call(this, tag, color);
+      this.width = .18 * game.p5.width;
+      this.height = .82 * game.p5.height;
+      this.position.x = 0;
+      this.position.y = 0;
+    }
+    TagCanvasLeft.prototype = Object.create(TagCanvasElement.prototype);
+    function TagCanvasRight(tag, color) {
+      TagCanvasLeft.call(this, tag, color);
+      this.position.x = game.p5.width - this.width;
+      this.position.y = game.p5.height - this.height;
+    }
+    TagCanvasRight.prototype = Object.create(TagCanvasLeft.prototype);
+
+    game.addElement(new TagCanvasTop('hello', game.p5.color(0, 255, 0)));
+    game.addElement(new TagCanvasBottom('bye', game.p5.color(0, 0, 255)));
+    game.addElement(new TagCanvasLeft('start', game.p5.color(255)));
+    game.addElement(new TagCanvasRight('end', game.p5.color(0)));
+
     function LibrarianSprite() {
       var librarian = this;
       var yuriSprite = new EDB.p5Sprite();
@@ -97,4 +143,4 @@
 
   var game = EDB.createp5Game([GameScene]);
   var myp5 = new p5(game);
-})()
+})();
