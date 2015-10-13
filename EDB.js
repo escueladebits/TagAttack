@@ -61,6 +61,7 @@ var EDB = (function() {
     return Promise.all(_.map(paths, EDB.loadEDBImage)).then(function(images) {
       sprite.animation = images;
       sprite.animationIndex = 0;
+      sprite.img = sprite.animation[sprite.animationIndex];
     });
   };
 
