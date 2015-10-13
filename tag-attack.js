@@ -23,6 +23,7 @@
   GameScene.prototype.start = function() {
     var game = this;
     game.backgroundColor = game.p5.color(255, 0, 0);
+    game.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(game.p5);
     game.p5.noSmooth();
     game.p5.frameRate(24);
 
