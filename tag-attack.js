@@ -26,62 +26,72 @@
     game.p5.noSmooth();
     game.p5.frameRate(24);
 
-    game.sprite = new EDB.p5Sprite();
-    game.sprite.init = function() {
-      this.position.x = 400;
-      this.position.y = 300;
-    };
-    game.sprite.init();
-    game.sprite.velocity.x = -2;
-    game.sprite.depth = 100;
-    game.sprite.scale = 2;
+    function LibrarianSprite() {
+      var librarian = this;
+      var yuriSprite = new EDB.p5Sprite();
+      var yuriAnimation = [
+        'data/yuriWalking_1.png',
+        'data/yuriWalking_2.png',
+        'data/yuriWalking_3.png',
+        'data/yuriWalking_4.png',
+      ];
+      var promiseAnimation = yuriSprite.loadAnimation(yuriAnimation);
+      yuriSprite.scale = 2;
+      yuriSprite.depth = 2;
 
-    var paths = [
-      'data/yuriWalking_1.png',
-      'data/yuriWalking_2.png',
-      'data/yuriWalking_3.png',
-      'data/yuriWalking_4.png',
-    ];
-    game.sprite.loadAnimation(paths).
-    then(function(i) {
-      game.addElement(game.sprite);
-    });
+      var picture = new EDB.p5Sprite();
+      picture.scale = 1;
+      picture.depth = 1;
 
-    game.picture = new EDB.p5Sprite();
-    game.picture.position = {
-      x : 600, y : 200,
-    };
-    EDB.loadEDBImage(Flickr.Feeder.getTagged().path())
-    .then(function(i) {
-      game.picture.img = i;
-      game.addElement(game.picture);
-    });
-    game.picture.growing = false;
+      var init = function() {
+        var yuriImg = yuriSprite.img;
+        var pictureImg = picture.img;
+        var position = {
+          x : game.p5.width,
+          y : game.p5.height * .8,
+        };
+        var velocity = {
+          x : -8,
+          y : 0,
+        }
+        yuriSprite.position.x = position.x;
+        yuriSprite.position.y = position.y;
+        picture.position.x = position.x;
+        picture.position.y = position.y - yuriImg.height * .5 * yuriSprite.scale - pictureImg.height * .5 * picture.scale + 10 * picture.scale;
+        yuriSprite.velocity = velocity;
+        picture.velocity = velocity;
+      };
 
-    var clock = new EDB.p5Element();
-    clock.draw = function(p5) {
-      p5.ellipse(this.position.x, this.position.y, 50, 50);
+      librarian.loaded = false;
+
+      yuriKey = pictureKey = -1;
+
+      this.setPicture = function(picturePath) {
+        var promisePicture = EDB.loadEDBImage(picturePath);
+        Promise.all([promiseAnimation, promisePicture]).then(function(results) {
+          picture.img = results[1];
+          init();
+          if (!librarian.loaded) {
+            game.addElement(yuriSprite);
+            game.addElement(picture);
+            librarian.loaded = true;
+          }
+        });
+      };
+      this.setPicture(FlickrFeeder.getTagged().path());
+
+      this.outOfScope = function() {
+        return yuriSprite.position.x < 0;
+      };
     };
-    clock.position = {
-      x: game.p5.width * .5,
-      y: game.p5.height * .5,
-    };
-    game.addElement(clock);
+
+    game.librarian = new LibrarianSprite();
   };
   GameScene.prototype.update = function() {
     var parentAnswer = EDB.Scene.prototype.update.call(this);
-    if (this.sprite.position.x <= 0) {
-      this.sprite.init();
-      this.sprite.depth = -1 * this.sprite.depth;
-      this.updateElements();
+    if (this.librarian.outOfScope()) {
+      this.librarian.setPicture(Flickr.Feeder.getUntagged().path());
     }
-    if (this.picture.scale >=1 && this.picture.growing) {
-      this.picture.growing = false;
-    }
-    if (this.picture.scale <= .5 && !this.picture.growing) {
-      this.picture.growing = true;
-    }
-    this.picture.scale += this.picture.growing ? .02: -.02;
     return this;
   }
 
