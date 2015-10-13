@@ -111,21 +111,26 @@
 
       librarian.loaded = false;
 
+      librarian.loading = false;
+
       yuriKey = pictureKey = -1;
 
       this.setPicture = function(picturePath) {
-        var promisePicture = EDB.loadEDBImage(picturePath);
-        Promise.all([promiseAnimation, promisePicture]).then(function(results) {
-          picture.img = results[1];
-          init();
-          if (!librarian.loaded) {
-            game.addElement(yuriSprite);
-            game.addElement(picture);
-            librarian.loaded = true;
-          }
-        });
+        if (!librarian.loading) {
+          librarian.loading = true;
+          var promisePicture = EDB.loadEDBImage(picturePath);
+          Promise.all([promiseAnimation, promisePicture]).then(function(results) {
+            picture.img = results[1];
+            librarian.loading = false;
+            init();
+            if (!librarian.loaded) {
+              game.addElement(yuriSprite);
+              game.addElement(picture);
+              librarian.loaded = true;
+            }
+          });
+        }
       };
-      this.setPicture(FlickrFeeder.getTagged().path());
 
       this.outOfScope = function() {
         return yuriSprite.position.x < 0;
@@ -136,6 +141,9 @@
   };
   GameScene.prototype.update = function() {
     var parentAnswer = EDB.Scene.prototype.update.call(this);
+    if (!this.librarian.loaded && Flickr.Feeder.available()) {
+      this.librarian.setPicture(Flickr.Feeder.getTagged().path());
+    }
     if (this.librarian.outOfScope()) {
       this.librarian.setPicture(Flickr.Feeder.getUntagged().path());
     }
