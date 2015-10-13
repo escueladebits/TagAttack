@@ -41,8 +41,8 @@
     };
     function TagCanvasTop(tag, color) {
       TagCanvasElement.call(this, tag, color);
-      this.width = .82 * game.p5.width;
-      this.height = .18 * game.p5.height;
+      this.width = .85 * game.p5.width;
+      this.height = .15 * game.p5.height;
       this.position.x = game.p5.width - this.width;
       this.position.y = 0;
     }
@@ -55,8 +55,8 @@
     TagCanvasBottom.prototype = Object.create(TagCanvasTop.prototype);
     function TagCanvasLeft(tag, color) {
       TagCanvasElement.call(this, tag, color);
-      this.width = .18 * game.p5.width;
-      this.height = .82 * game.p5.height;
+      this.width = .15 * game.p5.width;
+      this.height = .85 * game.p5.height;
       this.position.x = 0;
       this.position.y = 0;
     }
@@ -95,7 +95,7 @@
         var pictureImg = picture.img;
         var position = {
           x : game.p5.width,
-          y : game.p5.height * .8,
+          y : game.p5.height * .7,
         };
         var velocity = {
           x : -8,
