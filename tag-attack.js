@@ -24,6 +24,7 @@
     var game = this;
     game.backgroundColor = game.p5.color(255, 0, 0);
     game.p5.noSmooth();
+    game.p5.frameRate(24);
 
     game.sprite = new EDB.p5Sprite();
     game.sprite.init = function() {
