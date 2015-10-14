@@ -155,6 +155,40 @@
     }
   };
 
-  var game = EDB.createp5Game([GameScene]);
+  function PaletteScene(p) {
+    EDB.Scene.call(this, p, 320, 200);
+  }
+  PaletteScene.prototype = Object.create(EDB.Scene.prototype);
+  PaletteScene.prototype.start = function() {
+    var scene = this;
+    function Panel(x, y, index, luminance) {
+      EDB.p5Element.call(this);
+      this.position = {
+        x: x,
+        y: y,
+      }
+      this.index = index;
+      this.luminance = luminance;
+      this.p5color = (new EDB.NESPalette.ColorCreator(index, luminance)).p5color(scene.p5);
+    }
+    Panel.prototype = Object.create(EDB.p5Element.prototype);
+    Panel.prototype.draw = function(p5) {
+      p5.push();
+      p5.translate(this.position.x, this.position.y);
+      p5.fill(this.p5color);
+      p5.stroke(100);
+      p5.rect(0, 0, p5.width / 16, p5.height / 4);
+      p5.pop();
+    };
+
+    for (var i = 0; i< 16; i++) {
+      for (var l = 0; l < 4; l++) {
+        this.addElement(new Panel(i * this.p5.width / 16, l * this.p5.height / 4, i, l));
+      }
+    }
+  };
+
+  //var game = EDB.createp5Game([GameScene]);
+  var game = EDB.createp5Game([PaletteScene]);
   var myp5 = new p5(game);
 })();
