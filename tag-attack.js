@@ -35,9 +35,13 @@
     }
     TagCanvasElement.prototype = Object.create(EDB.p5Element.prototype);
     TagCanvasElement.prototype.draw = function(p5) {
-      p5.fill(this.backgroundColor);
       p5.noStroke();
+      p5.fill(50);
       p5.rect(this.position.x, this.position.y, this.width, this.height);
+      p5.fill(200);
+      p5.rect(this.position.x + 2, this.position.y + 2, this.width - 4, this.height - 4);
+      p5.fill(this.backgroundColor);
+      p5.rect(this.position.x + 4, this.position.y + 4, this.width - 8, this.height - 8);
     };
     function TagCanvasTop(tag, color) {
       TagCanvasElement.call(this, tag, color);
