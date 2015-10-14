@@ -16,6 +16,22 @@
 */
 
 (function() {
+  var tags = [
+    {tag: 'portrait', index: 0, lum: 1,},
+    {tag: 'map', index: 8, lum: 1,},
+    {tag: 'diagram', index: 8, lum: 2,},
+    {tag: 'people', index: 11, lum: 2,},
+    {tag: 'heraldry', index: 12, lum: 0,},
+    {tag: 'architecture', index: 0, lum: 0,},
+    {tag: 'music', index: 4, lum: 2,},
+    {tag: 'fauna', index: 5, lum: 1,},
+    {tag: 'flora', index: 9, lum: 1,},
+    {tag: 'cycling', index: 12, lum: 2,},
+  ];
+
+  var selectedTags = _.sortBy(tags, function() { return Math.random();}).slice(0,4);
+  selectedTags = _.sortBy(selectedTags, function(t) { return 1 / t.tag.length;});
+
   var GameScene = function(p) {
     EDB.Scene.call(this, p, 800, 600);
   };
@@ -72,10 +88,14 @@
     }
     TagCanvasRight.prototype = Object.create(TagCanvasLeft.prototype);
 
-    game.addElement(new TagCanvasTop('hello', game.p5.color(0, 255, 0)));
-    game.addElement(new TagCanvasBottom('bye', game.p5.color(0, 0, 255)));
-    game.addElement(new TagCanvasLeft('start', game.p5.color(255)));
-    game.addElement(new TagCanvasRight('end', game.p5.color(0)));
+    var topColor = (new EDB.NESPalette.ColorCreator(selectedTags[0].index, selectedTags[0].lum)).p5color(game.p5);
+    var bottomColor = (new EDB.NESPalette.ColorCreator(selectedTags[1].index, selectedTags[1].lum)).p5color(game.p5);
+    var leftColor = (new EDB.NESPalette.ColorCreator(selectedTags[2].index, selectedTags[2].lum)).p5color(game.p5);
+    var rightColor = (new EDB.NESPalette.ColorCreator(selectedTags[3].index, selectedTags[3].lum)).p5color(game.p5);
+    game.addElement(new TagCanvasTop('hello', topColor));
+    game.addElement(new TagCanvasBottom('bye', bottomColor));
+    game.addElement(new TagCanvasLeft('start', leftColor));
+    game.addElement(new TagCanvasRight('end', rightColor));
 
     function LibrarianSprite() {
       var librarian = this;
@@ -192,7 +212,7 @@
     }
   };
 
-  //var game = EDB.createp5Game([GameScene]);
-  var game = EDB.createp5Game([PaletteScene]);
+  var game = EDB.createp5Game([GameScene]);
+  //var game = EDB.createp5Game([PaletteScene]);
   var myp5 = new p5(game);
 })();
