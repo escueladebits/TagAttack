@@ -106,7 +106,7 @@ var EDB = (function() {
   };
   Scene.prototype.start = function() {};
   Scene.prototype.stop = function() {};
-  Scene.prototype.keyboardManager = function() {};
+  Scene.prototype.keyPressed = function(k) {};
 
   function loadEDBImage(path) {
     var promise = new Promise( function(resolve, reject) {
@@ -259,6 +259,10 @@ var EDB = (function() {
             currentScene.draw();
           }
         };
+
+        p.keyPressed = function() {
+          currentScene.keyPressed(p);
+        }
       };
     },
 

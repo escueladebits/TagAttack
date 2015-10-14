@@ -148,7 +148,12 @@
       this.librarian.setPicture(Flickr.Feeder.getUntagged().path());
     }
     return this;
-  }
+  };
+  GameScene.prototype.keyPressed = function(k) {
+    if (this.p5.key == 'z' || this.p5.key == 'Z') {
+      this.librarian.setPicture(Flickr.Feeder.getTagged().path());
+    }
+  };
 
   var game = EDB.createp5Game([GameScene]);
   var myp5 = new p5(game);
