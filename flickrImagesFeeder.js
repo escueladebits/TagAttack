@@ -18,24 +18,26 @@
 var Flickr = (function() {
   // Based in flickr API method: flickr.people.getPhotos
   // https://www.flickr.com/services/api/explore/flickr.people.getPublicPhotos
-  var local = false;
+  var local = true;
 
   var jsonResponse = null;
 
-  var httpRequest = new XMLHttpRequest();
-  httpRequest.onreadystatechange = function() {
-    if (httpRequest.readyState === 4) {
-      if (httpRequest.status === 200) {
-        jsonResponse = JSON.parse(httpRequest.responseText);
+  if (!local) {
+    var httpRequest = new XMLHttpRequest();
+    httpRequest.onreadystatechange = function() {
+      if (httpRequest.readyState === 4) {
+        if (httpRequest.status === 200) {
+          jsonResponse = JSON.parse(httpRequest.responseText);
+        }
       }
-    }
-  };
-  httpRequest.open('GET', 'https://api.flickr.com/services/rest/?method=flickr.people.getPublicPhotos&api_key=588ed2f326df81d5a7382e1bf64da098&user_id=12403504%40N02&safe_search=1&per_page=1024&page=212&format=json&nojsoncallback=1', true);
-  httpRequest.send(null);
+    };
+    httpRequest.open('GET', 'https://api.flickr.com/services/rest/?method=flickr.people.getPublicPhotos&api_key=588ed2f326df81d5a7382e1bf64da098&user_id=12403504%40N02&safe_search=1&per_page=1024&page=212&format=json&nojsoncallback=1', true);
+    httpRequest.send(null);
+  }
 
   FlickrFeeder = {
     available : function() {
-    return jsonResponse !== null;
+    return local || jsonResponse !== null;
     },
     getTagged: function() {
       if (local) {
