@@ -45,6 +45,7 @@
 
     function TagCanvasElement(tag, color) {
       EDB.p5Element.call(this);
+      this.tag = tag;
       this.width = this.height;
       this.backgroundColor = color;
       this.depth = 10;
@@ -56,8 +57,15 @@
       p5.rect(this.position.x, this.position.y, this.width, this.height);
       p5.fill(200);
       p5.rect(this.position.x + 2, this.position.y + 2, this.width - 4, this.height - 4);
-      p5.fill(this.backgroundColor);
+      p5.fill(this.backgroundColor.p5color(p5));
       p5.rect(this.position.x + 4, this.position.y + 4, this.width - 8, this.height - 8);
+
+      p5.textSize(24);
+      p5.strokeWeight(2);
+      p5.stroke(120);
+      p5.fill(this.backgroundColor.copy().lighter().p5color(p5));
+      p5.text(this.tag, this.position.x + .05 * this.width, this.position.y + .15 * this.height);
+
     };
     function TagCanvasTop(tag, color) {
       TagCanvasElement.call(this, tag, color);
@@ -88,14 +96,14 @@
     }
     TagCanvasRight.prototype = Object.create(TagCanvasLeft.prototype);
 
-    var topColor = (new EDB.NESPalette.ColorCreator(selectedTags[0].index, selectedTags[0].lum)).p5color(game.p5);
-    var bottomColor = (new EDB.NESPalette.ColorCreator(selectedTags[1].index, selectedTags[1].lum)).p5color(game.p5);
-    var leftColor = (new EDB.NESPalette.ColorCreator(selectedTags[2].index, selectedTags[2].lum)).p5color(game.p5);
-    var rightColor = (new EDB.NESPalette.ColorCreator(selectedTags[3].index, selectedTags[3].lum)).p5color(game.p5);
-    game.addElement(new TagCanvasTop('hello', topColor));
-    game.addElement(new TagCanvasBottom('bye', bottomColor));
-    game.addElement(new TagCanvasLeft('start', leftColor));
-    game.addElement(new TagCanvasRight('end', rightColor));
+    var topColor = (new EDB.NESPalette.ColorCreator(selectedTags[0].index, selectedTags[0].lum));
+    var bottomColor = (new EDB.NESPalette.ColorCreator(selectedTags[1].index, selectedTags[1].lum));
+    var leftColor = (new EDB.NESPalette.ColorCreator(selectedTags[2].index, selectedTags[2].lum));
+    var rightColor = (new EDB.NESPalette.ColorCreator(selectedTags[3].index, selectedTags[3].lum));
+    game.addElement(new TagCanvasTop(selectedTags[0].tag, topColor));
+    game.addElement(new TagCanvasBottom(selectedTags[1].tag, bottomColor));
+    game.addElement(new TagCanvasLeft(selectedTags[2].tag, leftColor));
+    game.addElement(new TagCanvasRight(selectedTags[3].tag, rightColor));
 
     function LibrarianSprite() {
       var librarian = this;
