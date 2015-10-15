@@ -34,8 +34,12 @@
 
   var GameScene = function(p) {
     EDB.Scene.call(this, p, 800, 600);
+    this.arcadeFont = null;
   };
   GameScene.prototype = Object.create(EDB.Scene.prototype);
+  GameScene.prototype.preload = function() {
+    this.arcadeFont = this.p5.loadFont('data/04B_03__.ttf');
+  };
   GameScene.prototype.start = function() {
     var game = this;
     game.backgroundColor = game.p5.color(255, 0, 0);
@@ -43,12 +47,17 @@
     game.p5.noSmooth();
     game.p5.frameRate(24);
 
-    function TagCanvasElement(tag, color) {
+    function TagCanvasElement(tag, color, font) {
       EDB.p5Element.call(this);
       this.tag = tag;
       this.width = this.height;
       this.backgroundColor = color;
       this.depth = 10;
+      this.font = font;
+
+      this.textX = 0;
+      this.textY = 0;
+      this.maxText = 100;
     }
     TagCanvasElement.prototype = Object.create(EDB.p5Element.prototype);
     TagCanvasElement.prototype.draw = function(p5) {
@@ -60,39 +69,50 @@
       p5.fill(this.backgroundColor.p5color(p5));
       p5.rect(this.position.x + 4, this.position.y + 4, this.width - 8, this.height - 8);
 
-      p5.textSize(24);
+      p5.textSize(29);
+      p5.textFont(this.font);
       p5.strokeWeight(2);
       p5.stroke(120);
       p5.fill(this.backgroundColor.copy().lighter().p5color(p5));
-      p5.text(this.tag, this.position.x + .05 * this.width, this.position.y + .15 * this.height);
-
+      p5.text(this.tag.slice(0, this.maxText), this.textX, this.textY);
     };
-    function TagCanvasTop(tag, color) {
-      TagCanvasElement.call(this, tag, color);
+    function TagCanvasTop() {
+      TagCanvasElement.apply(this, arguments);
       this.width = .85 * game.p5.width;
       this.height = .15 * game.p5.height;
       this.position.x = game.p5.width - this.width;
       this.position.y = 0;
+      this.textX = this.position.x + .8 * this.width;
+      this.textY = this.position.y + .35 * this.height;
+      this.maxText = 9;
     }
     TagCanvasTop.prototype = Object.create(TagCanvasElement.prototype);
-    function TagCanvasBottom(tag, color) {
-      TagCanvasTop.call(this, tag, color);
+    function TagCanvasBottom() {
+      TagCanvasTop.apply(this, arguments);
       this.position.x = 0;
       this.position.y = game.p5.height - this.height;
+      this.textX = this.position.x + 0.02 * this.width;
+      this.textY = this.position.y + 0.35 * this.height;
+      this.maxText = 100;
     }
     TagCanvasBottom.prototype = Object.create(TagCanvasTop.prototype);
-    function TagCanvasLeft(tag, color) {
-      TagCanvasElement.call(this, tag, color);
+    function TagCanvasLeft() {
+      TagCanvasElement.apply(this, arguments);
       this.width = .15 * game.p5.width;
       this.height = .85 * game.p5.height;
       this.position.x = 0;
       this.position.y = 0;
+      this.textX = this.position.x + 0.1 * this.width;
+      this.textY = this.position.y + 0.1 * this.height;
+      this.maxText = 6;
     }
     TagCanvasLeft.prototype = Object.create(TagCanvasElement.prototype);
-    function TagCanvasRight(tag, color) {
-      TagCanvasLeft.call(this, tag, color);
+    function TagCanvasRight() {
+      TagCanvasLeft.apply(this, arguments);
       this.position.x = game.p5.width - this.width;
       this.position.y = game.p5.height - this.height;
+      this.textX = this.position.x + 0.1 * this.width;
+      this.textY = this.position.y + 0.95 * this.height;
     }
     TagCanvasRight.prototype = Object.create(TagCanvasLeft.prototype);
 
@@ -100,10 +120,10 @@
     var bottomColor = (new EDB.NESPalette.ColorCreator(selectedTags[1].index, selectedTags[1].lum));
     var leftColor = (new EDB.NESPalette.ColorCreator(selectedTags[2].index, selectedTags[2].lum));
     var rightColor = (new EDB.NESPalette.ColorCreator(selectedTags[3].index, selectedTags[3].lum));
-    game.addElement(new TagCanvasTop(selectedTags[0].tag, topColor));
-    game.addElement(new TagCanvasBottom(selectedTags[1].tag, bottomColor));
-    game.addElement(new TagCanvasLeft(selectedTags[2].tag, leftColor));
-    game.addElement(new TagCanvasRight(selectedTags[3].tag, rightColor));
+    game.addElement(new TagCanvasTop(selectedTags[0].tag, topColor, game.arcadeFont));
+    game.addElement(new TagCanvasBottom(selectedTags[1].tag, bottomColor, game.arcadeFont));
+    game.addElement(new TagCanvasLeft(selectedTags[2].tag, leftColor, game.arcadeFont));
+    game.addElement(new TagCanvasRight(selectedTags[3].tag, rightColor, game.arcadeFont));
 
     function LibrarianSprite() {
       var librarian = this;
