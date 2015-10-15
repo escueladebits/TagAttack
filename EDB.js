@@ -107,6 +107,7 @@ var EDB = (function() {
   Scene.prototype.start = function() {};
   Scene.prototype.stop = function() {};
   Scene.prototype.keyPressed = function(k) {};
+  Scene.prototype.preload = function() {};
 
   function loadEDBImage(path) {
     var promise = new Promise( function(resolve, reject) {
@@ -242,6 +243,8 @@ var EDB = (function() {
     createp5Game : function(scenes, mainScene) {
       return function(p) {
         var currentScene = mainScene !== undefined ? new scenes[mainScene](p) : new scenes[0](p);
+
+        p.preload = currentScene.preload();
 
         p.setup = function() {
           p.createCanvas(currentScene.width, currentScene.height);
