@@ -62,9 +62,9 @@
     TagCanvasElement.prototype = Object.create(EDB.p5Element.prototype);
     TagCanvasElement.prototype.draw = function(p5) {
       p5.noStroke();
-      p5.fill(50);
+      p5.fill((new EDB.NESPalette.ColorCreator(12, 0)).p5color(p5));
       p5.rect(this.position.x, this.position.y, this.width, this.height);
-      p5.fill(200);
+      p5.fill((new EDB.NESPalette.ColorCreator(12, 1)).p5color(p5));
       p5.rect(this.position.x + 2, this.position.y + 2, this.width - 4, this.height - 4);
       p5.fill(this.backgroundColor.p5color(p5));
       p5.rect(this.position.x + 4, this.position.y + 4, this.width - 8, this.height - 8);
@@ -78,7 +78,7 @@
     };
     function TagCanvasTop() {
       TagCanvasElement.apply(this, arguments);
-      this.width = .85 * game.p5.width;
+      this.width = .85 * game.p5.width + 2;
       this.height = .15 * game.p5.height;
       this.position.x = game.p5.width - this.width;
       this.position.y = 0;
@@ -93,17 +93,19 @@
       this.position.y = game.p5.height - this.height;
       this.textX = this.position.x + 0.02 * this.width;
       this.textY = this.position.y + 0.35 * this.height;
+      this.depth = 11;
       this.maxText = 100;
     }
     TagCanvasBottom.prototype = Object.create(TagCanvasTop.prototype);
     function TagCanvasLeft() {
       TagCanvasElement.apply(this, arguments);
       this.width = .15 * game.p5.width;
-      this.height = .85 * game.p5.height;
+      this.height = .85 * game.p5.height + 2;
       this.position.x = 0;
       this.position.y = 0;
       this.textX = this.position.x + 0.1 * this.width;
       this.textY = this.position.y + 0.1 * this.height;
+      this.depth = 12;
       this.maxText = 6;
     }
     TagCanvasLeft.prototype = Object.create(TagCanvasElement.prototype);
@@ -113,6 +115,7 @@
       this.position.y = game.p5.height - this.height;
       this.textX = this.position.x + 0.1 * this.width;
       this.textY = this.position.y + 0.95 * this.height;
+      this.depth = 13;
     }
     TagCanvasRight.prototype = Object.create(TagCanvasLeft.prototype);
 
