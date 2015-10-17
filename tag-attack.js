@@ -79,7 +79,7 @@
     function TagCanvasTop() {
       TagCanvasElement.apply(this, arguments);
       this.width = .85 * game.p5.width + 2;
-      this.height = .15 * game.p5.height;
+      this.height = .15 * game.p5.width;
       this.position.x = game.p5.width - this.width;
       this.position.y = 0;
       this.textX = this.position.x + .8 * this.width;
@@ -100,7 +100,7 @@
     function TagCanvasLeft() {
       TagCanvasElement.apply(this, arguments);
       this.width = .15 * game.p5.width;
-      this.height = .85 * game.p5.height + 2;
+      this.height = game.p5.height - this.width + 2;
       this.position.x = 0;
       this.position.y = 0;
       this.textX = this.position.x + 0.1 * this.width;
