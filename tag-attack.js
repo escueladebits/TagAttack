@@ -58,6 +58,10 @@
       this.textX = 0;
       this.textY = 0;
       this.maxText = 100;
+
+      this.pictures = [];
+      this.deltaX = 0;
+      this.deltaY = 0;
     }
     TagCanvasElement.prototype = Object.create(EDB.p5Element.prototype);
     TagCanvasElement.prototype.draw = function(p5) {
@@ -68,13 +72,36 @@
       p5.rect(this.position.x + 2, this.position.y + 2, this.width - 4, this.height - 4);
       p5.fill(this.backgroundColor.p5color(p5));
       p5.rect(this.position.x + 4, this.position.y + 4, this.width - 8, this.height - 8);
-
-      p5.textSize(29);
-      p5.textFont(this.font);
-      p5.strokeWeight(2);
-      p5.stroke(120);
-      p5.fill(this.backgroundColor.copy().lighter().p5color(p5));
-      p5.text(this.tag.slice(0, this.maxText), this.textX, this.textY);
+    }
+    TagCanvasElement.prototype.addLabel = function() {
+      var tagCanvas = this;
+      var label = new EDB.p5Element();
+      label.draw = function(p5) {
+        p5.textSize(29);
+        p5.textFont(tagCanvas.font);
+        p5.strokeWeight(2);
+        p5.stroke(120);
+        p5.fill(tagCanvas.backgroundColor.copy().lighter().p5color(p5));
+        p5.text(tagCanvas.tag.slice(0, tagCanvas.maxText), tagCanvas.textX, tagCanvas.textY);
+      };
+      label.depth = 25;
+      game.addElement(label);
+    };
+    TagCanvasElement.prototype.getPosition = function(i) {
+      return {
+        x: this.position.x + game.p5.width * .075 + i * this.deltaX ,
+        y: this.position.y + game.p5.width * .075 + i * this.deltaY ,
+      };
+    };
+    TagCanvasElement.prototype.addPicture = function(pic) {
+      var i = this.pictures.push(pic) - 1;
+      var spritePicture = new EDB.p5Sprite();
+      spritePicture.img = pic;
+      spritePicture.position = this.getPosition(i);
+      spritePicture.depth = 20;
+      spritePicture.scale = .45;
+      console.log(i,spritePicture);
+      game.addElement(spritePicture);
     };
     function TagCanvasTop() {
       TagCanvasElement.apply(this, arguments);
@@ -85,6 +112,9 @@
       this.textX = this.position.x + .8 * this.width;
       this.textY = this.position.y + .35 * this.height;
       this.maxText = 9;
+
+      this.deltaX = this.height + 0.5;
+      this.deltaY = 0;
     }
     TagCanvasTop.prototype = Object.create(TagCanvasElement.prototype);
     function TagCanvasBottom() {
@@ -107,6 +137,9 @@
       this.textY = this.position.y + 0.1 * this.height;
       this.depth = 12;
       this.maxText = 6;
+
+      this.deltaX = 0;
+      this.deltaY = this.width + 0.5;
     }
     TagCanvasLeft.prototype = Object.create(TagCanvasElement.prototype);
     function TagCanvasRight() {
@@ -122,11 +155,17 @@
     var topColor = (new EDB.NESPalette.ColorCreator(selectedTags[0].index, selectedTags[0].lum));
     var bottomColor = (new EDB.NESPalette.ColorCreator(selectedTags[1].index, selectedTags[1].lum));
     var leftColor = (new EDB.NESPalette.ColorCreator(selectedTags[2].index, selectedTags[2].lum));
-    var rightColor = (new EDB.NESPalette.ColorCreator(selectedTags[3].index, selectedTags[3].lum));
-    game.addElement(new TagCanvasTop(selectedTags[0].tag, topColor, game.arcadeFont));
-    game.addElement(new TagCanvasBottom(selectedTags[1].tag, bottomColor, game.arcadeFont));
-    game.addElement(new TagCanvasLeft(selectedTags[2].tag, leftColor, game.arcadeFont));
-    game.addElement(new TagCanvasRight(selectedTags[3].tag, rightColor, game.arcadeFont));
+    var rightColor = (new EDB.NESPalette.ColorCreator(selectedTags[3].index, selectedTags[3].lum))
+    game.tagCanvases = [];
+    game.tagCanvases[game.p5.UP_ARROW] = new TagCanvasTop(selectedTags[0].tag, topColor, game.arcadeFont);
+    game.tagCanvases[game.p5.DOWN_ARROW] = new TagCanvasBottom(selectedTags[1].tag, bottomColor, game.arcadeFont);
+    game.tagCanvases[game.p5.LEFT_ARROW] = new TagCanvasLeft(selectedTags[2].tag, leftColor, game.arcadeFont);
+    game.tagCanvases[game.p5.RIGHT_ARROW] = new TagCanvasRight(selectedTags[3].tag, rightColor, game.arcadeFont);
+
+    _.each([game.p5.UP_ARROW, game.p5.DOWN_ARROW, game.p5.LEFT_ARROW, game.p5.RIGHT_ARROW], function(key) {
+      game.addElement(game.tagCanvases[key]);
+      game.tagCanvases[key].addLabel();
+    });
 
     function LibrarianSprite() {
       var librarian = this;
@@ -187,6 +226,15 @@
         }
       };
 
+      this.getPicture = function() {
+        if (!librarian.loading && picture.img !== null) {
+          return picture.img;
+        }
+        else {
+          return null;
+        }
+      }
+
       this.outOfScope = function() {
         return yuriSprite.position.x < 0;
       };
@@ -208,6 +256,12 @@
     if (this.p5.key == 'z' || this.p5.key == 'Z') {
       this.librarian.setPicture(Flickr.Feeder.getTagged().path());
     }
+    keys = [this.p5.UP_ARROW, this.p5.DOWN_ARROW, this.p5.LEFT_ARROW, this.p5.RIGHT_ARROW];
+    if (keys.indexOf(this.p5.keyCode) !== -1) {
+      this.tagCanvases[this.p5.keyCode].addPicture(this.librarian.getPicture());
+      this.librarian.setPicture(Flickr.Feeder.getTagged().path());
+    }
+  };
   };
 
   function PaletteScene(p) {
