@@ -50,10 +50,35 @@
   };
   GameScene.prototype.start = function() {
     var game = this;
-    game.backgroundColor = game.p5.color(255, 0, 0);
+    //game.backgroundColor = game.p5.color(0, 0, 15);
     game.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(game.p5);
     game.p5.noSmooth();
     game.p5.frameRate(24);
+
+    function Clock(music, x, y, width) {
+      EDB.p5Element.call(this);
+      this.music = music;
+      this.depth = 100;
+      this.position = {
+        x : x,
+        y : y,
+      };
+      this.width = width;
+    }
+    Clock.prototype = Object.create(EDB.p5Element.prototype);
+    Clock.prototype.draw = function(p5) {
+      EDB.p5Element.prototype.draw.call(this, p5);
+      p5.fill(0, 0, 15, 200);
+      p5.rect(this.position.x, this.position.y, this.width, 15);
+      var initColor = p5.color(0, 255, 0, 200);
+      var endColor = p5.color(255, 0, 0, 200);
+      p5.colorMode(p5.HSB);
+      var printColor = p5.color(p5.map(game.secs, 0, game.music.duration(), p5.hue(initColor), p5.hue(endColor)), p5.saturation(initColor), p5.brightness(initColor), 200)
+      p5.fill(printColor);
+      p5.colorMode(p5.RGB);
+      p5.noStroke();
+      p5.rect(this.position.x + 2, this.position.y + 2, this.width -4 - p5.map(game.secs, 0, game.music.duration(), 0, this.width - 4), 11);
+    };
 
     function TagCanvasElement(tag, color, font) {
       EDB.p5Element.call(this);
@@ -249,6 +274,9 @@
     };
 
     game.librarian = new LibrarianSprite();
+    var x = game.p5.width * .15;
+    game.clock = new Clock(game.music, x + 2, x + 10, game.p5.width - x *2 - 4);
+    game.addElement(game.clock);
   };
   GameScene.prototype.update = function() {
     var parentAnswer = EDB.Scene.prototype.update.call(this);
