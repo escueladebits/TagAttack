@@ -35,10 +35,18 @@
   var GameScene = function(p) {
     EDB.Scene.call(this, p, 800, 600);
     this.arcadeFont = null;
+
+    this.nextScene = this;
   };
   GameScene.prototype = Object.create(EDB.Scene.prototype);
   GameScene.prototype.preload = function() {
+    var game = this;
     this.arcadeFont = this.p5.loadFont('data/04B_03__.ttf');
+    this.music = this.p5.loadSound('data/Ozzed_-_8-bit_Party.mp3', function() {
+      game.music.rate(1);
+      game.music.play();
+      game.time0 = game.p5.millis();
+    });
   };
   GameScene.prototype.start = function() {
     var game = this;
@@ -250,7 +258,11 @@
     if (this.librarian.outOfScope()) {
       this.librarian.setPicture(Flickr.Feeder.getUntagged().path());
     }
-    return this;
+    this.secs = (this.p5.millis() - this.time0) / 1000;
+    if (this.secs >= this.music.duration()) {
+      this.stop();
+    }
+    return this.nextScene;
   };
   GameScene.prototype.keyPressed = function(k) {
     if (this.p5.key == 'z' || this.p5.key == 'Z') {
@@ -262,6 +274,10 @@
       this.librarian.setPicture(Flickr.Feeder.getTagged().path());
     }
   };
+  GameScene.prototype.stop = function() {
+    EDB.Scene.prototype.stop.call(this);
+    this.music.stop();
+    this.nextScene = null;
   };
 
   function PaletteScene(p) {
