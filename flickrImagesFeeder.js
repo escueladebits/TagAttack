@@ -31,7 +31,8 @@ var Flickr = (function() {
         }
       }
     };
-    httpRequest.open('GET', 'https://api.flickr.com/services/rest/?method=flickr.people.getPublicPhotos&api_key=588ed2f326df81d5a7382e1bf64da098&user_id=12403504%40N02&safe_search=1&per_page=1024&page=212&format=json&nojsoncallback=1', true);
+    var page = Math.floor(1001 * Math.random());
+    httpRequest.open('GET', 'https://api.flickr.com/services/rest/?method=flickr.people.getPublicPhotos&api_key=588ed2f326df81d5a7382e1bf64da098&user_id=12403504%40N02&safe_search=1&per_page=1024&page='+page+'&format=json&nojsoncallback=1', true);
     httpRequest.send(null);
   }
 
