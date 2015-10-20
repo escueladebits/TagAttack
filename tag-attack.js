@@ -44,7 +44,7 @@
   GameScene.prototype = Object.create(EDB.Scene.prototype);
   GameScene.prototype.preload = function() {
     var game = this;
-    this.arcadeFont = this.p5.loadFont('data/04B_03__.ttf');
+    this.arcadeFont = this.p5.loadFont('data/04B_03__.TTF');
     this.music = this.p5.loadSound('data/Ozzed_-_8-bit_Party.mp3', function() {
       game.music.rate(1);
       game.music.play();
