@@ -246,6 +246,10 @@
         if (!librarian.loading) {
           librarian.loading = true;
           var promisePicture = EDB.loadEDBImage(picturePath);
+          if (picture.img !== null) {
+            init();
+            this.pause();
+          }
           Promise.all([promiseAnimation, promisePicture]).then(function(results) {
             picture.img = results[1];
             librarian.loading = false;
@@ -259,6 +263,13 @@
         }
       };
 
+      this.pause = function() {
+        yuriSprite.velocity = picture.velocity = {
+          x : 0,
+          y : 0,
+        };
+      };
+
       this.getPicture = function() {
         if (!librarian.loading && picture.img !== null) {
           return picture.img;
@@ -266,7 +277,7 @@
         else {
           return null;
         }
-      }
+      };
 
       this.outOfScope = function() {
         return yuriSprite.position.x < 0;
@@ -298,8 +309,9 @@
     }
     keys = [this.p5.UP_ARROW, this.p5.DOWN_ARROW, this.p5.LEFT_ARROW, this.p5.RIGHT_ARROW];
     if (keys.indexOf(this.p5.keyCode) !== -1) {
-      this.tagCanvases[this.p5.keyCode].addPicture(this.librarian.getPicture());
+      var picture = this.librarian.getPicture();
       this.librarian.setPicture(Flickr.Feeder.getTagged().path());
+      this.tagCanvases[this.p5.keyCode].addPicture(picture);
     }
   };
   GameScene.prototype.stop = function() {
