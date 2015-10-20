@@ -84,25 +84,35 @@ var EDB = (function() {
 
     var elements = [];
     this.addElement = function(e) {
-      elements.push(e);
+      var i = elements.push(e);
       this.updateElements();
+      return i;
     };
     this.getElements = function() {
       return elements;
     };
     this.updateElements = function() {
       elements = _.sortBy(elements, 'depth');
+    };
+    this.removeElement = function(k) {
+      elements[k] = null;
     }
   };
 
   Scene.prototype.update = function() {
-    _.each(this.getElements(), function(e) { e.update();});
+    _.each(this.getElements(), function(e) {
+        if (e !== null) { e.update();}
+    });
     return this;
   };
   Scene.prototype.draw = function() {
     var p5 = this.p5;
     p5.background(this.backgroundColor);
-    _.each(this.getElements(), function(e) { e.draw(p5);});
+    _.each(this.getElements(), function(e) {
+      if (e !== null) {
+        e.draw(p5);
+      }
+    });
   };
   Scene.prototype.start = function() {};
   Scene.prototype.stop = function() {};

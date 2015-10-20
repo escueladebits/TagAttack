@@ -31,12 +31,15 @@
 
   var selectedTags = _.sortBy(tags, function() { return Math.random();}).slice(0,4);
   selectedTags = _.sortBy(selectedTags, function(t) { return 1 / t.tag.length;});
+  var usedTags = [];
 
   var GameScene = function(p) {
     EDB.Scene.call(this, p, 800, 600);
     this.arcadeFont = null;
 
     this.nextScene = this;
+
+    this.arrows = [p.UP_ARROW, p.DOWN_ARROW, p.LEFT_ARROW, p.RIGHT_ARROW];
   };
   GameScene.prototype = Object.create(EDB.Scene.prototype);
   GameScene.prototype.preload = function() {
@@ -47,6 +50,7 @@
       game.music.play();
       game.time0 = game.p5.millis();
     });
+    this.successBell = this.p5.loadSound('data/Pickup_Coin14.wav');
   };
   GameScene.prototype.start = function() {
     var game = this;
@@ -95,9 +99,15 @@
       this.pictures = [];
       this.deltaX = 0;
       this.deltaY = 0;
+
+      this.maxItems = 0;
     }
     TagCanvasElement.prototype = Object.create(EDB.p5Element.prototype);
+    TagCanvasElement.prototype.full = function() {
+      return this.pictures.length >= this.maxItems;
+    };
     TagCanvasElement.prototype.draw = function(p5) {
+      var tagcanvas = this;
       p5.noStroke();
       p5.fill((new EDB.NESPalette.ColorCreator(12, 0)).p5color(p5));
       p5.rect(this.position.x, this.position.y, this.width, this.height);
@@ -105,21 +115,29 @@
       p5.rect(this.position.x + 2, this.position.y + 2, this.width - 4, this.height - 4);
       p5.fill(this.backgroundColor.p5color(p5));
       p5.rect(this.position.x + 4, this.position.y + 4, this.width - 8, this.height - 8);
+
+      //pictures
+      _.each(this.pictures, function(pict, i) {
+        var pos = tagcanvas.getPosition(i);
+        pos.x = pos.x - pict.width * .5 * .45;
+        pos.y = pos.y - pict.height * .5 * .45;
+        EDB.p5drawImage(p5, pict, pos.x, pos.y, pict.width * .45, pict.height * .45);
+      });
+
+      // tag
+      p5.textSize(29);
+      p5.textFont(this.font);
+      p5.strokeWeight(2);
+      p5.stroke(120);
+      p5.fill(this.backgroundColor.copy().lighter().p5color(p5));
+      p5.text(this.tag.slice(0, this.maxText), this.textX, this.textY);
     }
-    TagCanvasElement.prototype.addLabel = function() {
-      var tagCanvas = this;
-      var label = new EDB.p5Element();
-      label.draw = function(p5) {
-        p5.textSize(29);
-        p5.textFont(tagCanvas.font);
-        p5.strokeWeight(2);
-        p5.stroke(120);
-        p5.fill(tagCanvas.backgroundColor.copy().lighter().p5color(p5));
-        p5.text(tagCanvas.tag.slice(0, tagCanvas.maxText), tagCanvas.textX, tagCanvas.textY);
-      };
-      label.depth = 25;
-      game.addElement(label);
+    TagCanvasElement.prototype.addElement = function() {
+      this.idScene = game.addElement(this) + 1;
     };
+    TagCanvasElement.prototype.removeElement = function() {
+      game.removeElement(this.idScene);
+    }
     TagCanvasElement.prototype.getPosition = function(i) {
       return {
         x: this.position.x + game.p5.width * .075 + i * this.deltaX ,
@@ -127,14 +145,7 @@
       };
     };
     TagCanvasElement.prototype.addPicture = function(pic) {
-      var i = this.pictures.push(pic) - 1;
-      var spritePicture = new EDB.p5Sprite();
-      spritePicture.img = pic;
-      spritePicture.position = this.getPosition(i);
-      spritePicture.depth = 20;
-      spritePicture.scale = .45;
-      console.log(i,spritePicture);
-      game.addElement(spritePicture);
+      this.pictures.push(pic);
     };
     function TagCanvasTop() {
       TagCanvasElement.apply(this, arguments);
@@ -148,6 +159,8 @@
 
       this.deltaX = this.height + 0.5;
       this.deltaY = 0;
+
+      this.maxItems = 5;
     }
     TagCanvasTop.prototype = Object.create(TagCanvasElement.prototype);
     function TagCanvasBottom() {
@@ -173,6 +186,8 @@
 
       this.deltaX = 0;
       this.deltaY = this.width + 0.5;
+
+      this.maxItems = 4;
     }
     TagCanvasLeft.prototype = Object.create(TagCanvasElement.prototype);
     function TagCanvasRight() {
@@ -185,19 +200,37 @@
     }
     TagCanvasRight.prototype = Object.create(TagCanvasLeft.prototype);
 
-    var topColor = (new EDB.NESPalette.ColorCreator(selectedTags[0].index, selectedTags[0].lum));
-    var bottomColor = (new EDB.NESPalette.ColorCreator(selectedTags[1].index, selectedTags[1].lum));
-    var leftColor = (new EDB.NESPalette.ColorCreator(selectedTags[2].index, selectedTags[2].lum));
-    var rightColor = (new EDB.NESPalette.ColorCreator(selectedTags[3].index, selectedTags[3].lum))
-    game.tagCanvases = [];
-    game.tagCanvases[game.p5.UP_ARROW] = new TagCanvasTop(selectedTags[0].tag, topColor, game.arcadeFont);
-    game.tagCanvases[game.p5.DOWN_ARROW] = new TagCanvasBottom(selectedTags[1].tag, bottomColor, game.arcadeFont);
-    game.tagCanvases[game.p5.LEFT_ARROW] = new TagCanvasLeft(selectedTags[2].tag, leftColor, game.arcadeFont);
-    game.tagCanvases[game.p5.RIGHT_ARROW] = new TagCanvasRight(selectedTags[3].tag, rightColor, game.arcadeFont);
+    function TagCanvasCreator(p5position, tag, color, font) {
+      var creator;
+      switch(p5position) {
+        case game.p5.UP_ARROW:
+          return TagCanvasTop;
+          break;
+        case game.p5.DOWN_ARROW:
+          return TagCanvasBottom;
+          break;
+        case game.p5.LEFT_ARROW:
+          return TagCanvasLeft;
+          break;
+        case game.p5.RIGHT_ARROW:
+          return TagCanvasRight;
+          break;
+      }
+    }
 
-    _.each([game.p5.UP_ARROW, game.p5.DOWN_ARROW, game.p5.LEFT_ARROW, game.p5.RIGHT_ARROW], function(key) {
-      game.addElement(game.tagCanvases[key]);
-      game.tagCanvases[key].addLabel();
+    this.changeTagCanvas = function(arrow, tag) {
+      var color = new EDB.NESPalette.ColorCreator(tag.index, tag.lum);
+      var oldTagCanvas = game.tagCanvases[arrow];
+      game.tagCanvases[arrow] = new (TagCanvasCreator(arrow))(tag.tag, color, game.arcadeFont);
+      game.tagCanvases[arrow].addElement();
+      oldTagCanvas.removeElement();
+    };
+
+    game.tagCanvases = [];
+     _.each(game.arrows, function(direction, i) {
+      var color = new EDB.NESPalette.ColorCreator(selectedTags[i].index, selectedTags[i].lum);
+      game.tagCanvases[direction] = new (TagCanvasCreator(direction))(selectedTags[i].tag, color, game.arcadeFont);
+      game.tagCanvases[direction].addElement();
     });
 
     function LibrarianSprite() {
@@ -291,6 +324,7 @@
   };
   GameScene.prototype.update = function() {
     var parentAnswer = EDB.Scene.prototype.update.call(this);
+    var game = this;
     if (!this.librarian.loaded && Flickr.Feeder.available()) {
       this.librarian.setPicture(Flickr.Feeder.getTagged().path());
     }
@@ -301,14 +335,35 @@
     if (this.secs >= this.music.duration()) {
       this.stop();
     }
+    _.each(this.arrows, function(arrow) {
+      if (game.tagCanvases[arrow].full()) {
+        if (selectedTags.length + usedTags.length === tags.length) {
+          usedTags = [];
+        }
+
+        var oldTag = _.find(selectedTags, function(tc) {
+          return tc.tag == game.tagCanvases[arrow].tag;
+        });
+        usedTags.push(oldTag);
+        var oldIndex = selectedTags.indexOf(oldTag);
+        selectedTags.splice(oldIndex, 1);
+        var newTag = _.sample(_.filter(tags, function(tc) {
+          return selectedTags.indexOf(tc) === -1 && usedTags.indexOf(tc) === -1;
+        }));
+        selectedTags.push(newTag);
+
+        game.successBell.play();
+
+        game.changeTagCanvas(arrow, newTag);
+      }
+    });
     return this.nextScene;
   };
   GameScene.prototype.keyPressed = function(k) {
     if (this.p5.key == 'z' || this.p5.key == 'Z') {
       this.librarian.setPicture(Flickr.Feeder.getTagged().path());
     }
-    keys = [this.p5.UP_ARROW, this.p5.DOWN_ARROW, this.p5.LEFT_ARROW, this.p5.RIGHT_ARROW];
-    if (keys.indexOf(this.p5.keyCode) !== -1) {
+    if (this.arrows.indexOf(this.p5.keyCode) !== -1) {
       var picture = this.librarian.getPicture();
       this.librarian.setPicture(Flickr.Feeder.getTagged().path());
       this.tagCanvases[this.p5.keyCode].addPicture(picture);
