@@ -18,7 +18,7 @@
 var Flickr = (function() {
   // Based in flickr API method: flickr.people.getPhotos
   // https://www.flickr.com/services/api/explore/flickr.people.getPublicPhotos
-  var local = true;
+  var local = false;
 
   var jsonResponse = null;
 
