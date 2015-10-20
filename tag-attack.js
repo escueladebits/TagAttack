@@ -50,7 +50,8 @@
       game.music.play();
       game.time0 = game.p5.millis();
     });
-    this.successBell = this.p5.loadSound('data/Pickup_Coin14.wav');
+    this.simpleBell = this.p5.loadSound('data/Pickup_Coin14.wav');
+    this.successBell = this.p5.loadSound('data/Randomize7.wav');
   };
   GameScene.prototype.start = function() {
     var game = this;
@@ -367,6 +368,7 @@
       this.librarian.setPicture(Flickr.Feeder.getTagged().path());
     }
     if (this.arrows.indexOf(this.p5.keyCode) !== -1) {
+      this.simpleBell.play();
       var picture = this.librarian.getPicture();
       this.librarian.setPicture(Flickr.Feeder.getTagged().path());
       this.tagCanvases[this.p5.keyCode].addPicture(picture);
