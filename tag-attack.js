@@ -360,6 +360,9 @@
     return this.nextScene;
   };
   GameScene.prototype.keyPressed = function(k) {
+    if (this.librarian.loading) {
+      return;
+    }
     if (this.p5.key == 'z' || this.p5.key == 'Z') {
       this.librarian.setPicture(Flickr.Feeder.getTagged().path());
     }
