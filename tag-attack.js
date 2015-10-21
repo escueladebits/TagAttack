@@ -35,7 +35,6 @@
 
   var IntroScene = function(p) {
     EDB.Scene.call(this, p, 800, 600);
-    this.arcadeFont = null;
     this.textColor = null;
 
     this.gameScene = new GameScene(p);
@@ -43,11 +42,13 @@
     this.ready = false;
   };
   IntroScene.prototype = Object.create(EDB.Scene.prototype);
-  IntroScene.prototype.preload = function() {
-    //resources = this.nextScene.preload();
 
-    this.introMusic = this.p5.loadSound('data/Ozzed_-_Satisfucktion.mp3');
-    this.arcadeFont = this.p5.loadFont('data/04B_03__.TTF');
+  IntroScene.resources = [
+    {'type': 'sound', 'name': 'introMusic', 'path': 'data/Ozzed_-_Satisfucktion.mp3'},
+    {'type': 'font', 'name': 'arcadeFont', 'path': 'data/04B_03__.TTF'},
+  ];
+  IntroScene.prototype.resourcesList = function() {
+    return IntroScene.resources;
   }
   IntroScene.prototype.start = function() {
     var intro = this;
@@ -84,6 +85,7 @@
     this.addElement(footer);
   };
   IntroScene.prototype.update = function() {
+    EDB.Scene.prototype.update.call(this);
     if (this.introMusic.isLoaded() && !this.introMusic.isPlaying()) {
       this.introMusic.play();
     }
@@ -97,6 +99,7 @@
   IntroScene.prototype.stop = function() {
     this.introMusic.stop();
     this.nextScene = this.gameScene;
+    this.nextScene.resourceManager = this.resourceManager;
   }
   IntroScene.prototype.keyPressed = function(k) {
     if (this.ready) {
@@ -119,16 +122,13 @@
     this.arrows = [p.UP_ARROW, p.DOWN_ARROW, p.LEFT_ARROW, p.RIGHT_ARROW];
   };
   GameScene.prototype = Object.create(EDB.Scene.prototype);
-  GameScene.prototype.preload = function() {
-    var game = this;
-    this.arcadeFont = this.p5.loadFont('data/04B_03__.TTF');
-    this.music = this.p5.loadSound('data/Ozzed_-_8-bit_Party.mp3', function() {
-      game.music.rate(1);
-      game.music.play();
-      game.time0 = game.p5.millis();
-    });
-    this.simpleBell = this.p5.loadSound('data/Pickup_Coin14.wav');
-    this.successBell = this.p5.loadSound('data/Randomize7.wav');
+  GameScene.resources = [
+    {'type': 'sound', 'name': 'music', 'path': 'data/Ozzed_-_8-bit_Party.mp3'},
+    {'type': 'sound', 'name': 'simpleBell', 'path': 'data/Pickup_Coin14.wav'},
+    {'type': 'sound', 'name': 'successBell', 'path': 'data/Randomize7.wav'},
+  ];
+  GameScene.prototype.resourcesList = function() {
+    return GameScene.resources;
   };
   GameScene.prototype.start = function() {
     var game = this;
@@ -411,7 +411,7 @@
     game.addElement(game.clock);
   };
   GameScene.prototype.update = function() {
-    var parentAnswer = EDB.Scene.prototype.update.call(this);
+    EDB.Scene.prototype.update.call(this);
     var game = this;
     if (!this.librarian.loaded && Flickr.Feeder.available()) {
       this.librarian.setPicture(Flickr.Feeder.getTagged().path());
@@ -519,7 +519,7 @@
     }
   };
 
-  var game = EDB.createp5Game([IntroScene]);
+  var game = EDB.createp5Game([IntroScene, GameScene], 0);
   //var game = EDB.createp5Game([PaletteScene]);
   var myp5 = new p5(game);
 })();
