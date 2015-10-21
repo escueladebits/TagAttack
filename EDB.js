@@ -16,6 +16,51 @@
 */
 
 var EDB = (function() {
+  function ResourcesManager() {
+    this.types = {};
+    this.resources = [];
+  }
+  ResourcesManager.prototype.addType = function(name, fn) {
+    this.types[name] = fn;
+  };
+  ResourcesManager.prototype.load = function(type, name, path) {
+    var rm = this;
+    if (this.types[type] === undefined) {
+      return false;
+    }
+    var newResource = {
+      name: name,
+      r: new Promise(function(resolve, reject) {
+        rm.types[type](path, function(i) {
+          newResource.value = i;
+          resolve(i);
+        });
+      }),
+      value: null,
+    };
+    this.resources.push(newResource);
+  };
+  ResourcesManager.prototype.ready = function() {
+    var p = _.map(this.resources, 'r');
+    return Promise.all(p);
+  };
+  ResourcesManager.prototype.getValue = function(name) {
+    for (r of this.resources) {
+      if (r.name === name) {
+        return r.value;
+      }
+    }
+  };
+  function p5ResourcesManager(p) {
+    ResourcesManager.call(this);
+
+    this.types = {
+      'font' : p.loadFont.bind(p),
+      'sound' : p.loadSound.bind(p),
+    };
+  }
+  p5ResourcesManager.prototype = Object.create(ResourcesManager.prototype);
+
   function p5Element() {
     this.position = {
       x : 0,
@@ -82,6 +127,8 @@ var EDB = (function() {
     this.p5 = p;
     this.backgroundColor = 0;
 
+    this.resourceManager = null;
+
     var elements = [];
     this.addElement = function(e) {
       var i = elements.push(e);
@@ -98,11 +145,20 @@ var EDB = (function() {
       elements[k] = null;
     }
   };
-
+  Scene.prototype.resourcesList = function() {
+    return [];
+  };
   Scene.prototype.update = function() {
     _.each(this.getElements(), function(e) {
         if (e !== null) { e.update();}
     });
+    for (r of this.resourcesList()) {
+      if (this[r.name] === undefined && !r.loading) {
+
+        r.loading = true;
+        this[r.name] = this.resourceManager.getValue(r.name);
+      }
+    }
     return this;
   };
   Scene.prototype.draw = function() {
@@ -117,7 +173,7 @@ var EDB = (function() {
   Scene.prototype.start = function() {};
   Scene.prototype.stop = function() {};
   Scene.prototype.keyPressed = function(k) {};
-  Scene.prototype.preload = function() {};
+  //Scene.prototype.preload = function() {};
 
   function loadEDBImage(path) {
     var promise = new Promise( function(resolve, reject) {
@@ -257,15 +313,26 @@ var EDB = (function() {
     createp5Game : function(scenes, mainScene) {
       return function(p) {
         var currentScene = mainScene !== undefined ? new scenes[mainScene](p) : new scenes[0](p);
-
-        p.preload = currentScene.preload();
+        var resources = new p5ResourcesManager(p);
+        var ready = false;
 
         p.setup = function() {
           p.createCanvas(currentScene.width, currentScene.height);
-          currentScene.start();
+
+          for (scene of scenes) {
+            for (r of scene.resources) {
+              resources.load(r.type, r.name, r.path);
+            }
+          }
+          currentScene.resourceManager = resources;
+          resources.ready().then(function() {
+            ready = true;
+            currentScene.start();
+          });
         };
 
         p.draw = function() {
+          if (!ready) return;
           var newScene = currentScene.update();
           if (newScene !== currentScene) {
             currentScene.stop();
@@ -278,10 +345,12 @@ var EDB = (function() {
         };
 
         p.keyPressed = function() {
+          if (!ready) return;
           currentScene.keyPressed(p);
         };
 
         p.mousePressed = function() {
+          if (!ready) return;
           currentScene.mousePressed();
         };
       };
@@ -302,5 +371,7 @@ var EDB = (function() {
     },
 
     NESPalette : new LuminancePalette(NEScolors),
+
+    p5ResourcesManager: p5ResourcesManager,
   };
 })();
