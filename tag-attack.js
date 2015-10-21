@@ -129,7 +129,7 @@
       p5.textSize(29);
       p5.textFont(this.font);
       p5.strokeWeight(2);
-      p5.stroke(120);
+      p5.stroke(20);
       p5.fill(this.backgroundColor.copy().lighter().p5color(p5));
       p5.text(this.tag.slice(0, this.maxText), this.textX, this.textY);
     };
