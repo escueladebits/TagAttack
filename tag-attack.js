@@ -33,6 +33,83 @@
   selectedTags = _.sortBy(selectedTags, function(t) { return 1 / t.tag.length;});
   var usedTags = [];
 
+  var IntroScene = function(p) {
+    EDB.Scene.call(this, p, 800, 600);
+    this.arcadeFont = null;
+    this.textColor = null;
+
+    this.gameScene = new GameScene(p);
+    this.nextScene = this;
+    this.ready = false;
+  };
+  IntroScene.prototype = Object.create(EDB.Scene.prototype);
+  IntroScene.prototype.preload = function() {
+    //resources = this.nextScene.preload();
+
+    this.introMusic = this.p5.loadSound('data/Ozzed_-_Satisfucktion.mp3');
+    this.arcadeFont = this.p5.loadFont('data/04B_03__.TTF');
+  }
+  IntroScene.prototype.start = function() {
+    var intro = this;
+    this.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(this.p5);
+
+    this.textColor = (new EDB.NESPalette.ColorCreator(Math.floor(12 * Math.random()), 1)).p5color(this.p5);
+
+    //main title
+    var title = new EDB.p5Element();
+    title.draw = function(p5) {
+      if (intro.arcadeFont !== null && intro.textColor !== null) {
+        p5.fill(intro.textColor);
+        p5.noStroke();
+        p5.textFont(intro.arcadeFont);
+        p5.textSize(125);
+        p5.text("Tag Attack", p5.width * .10, p5.height * .283);
+      }
+    };
+    this.addElement(title);
+
+    // footer
+    var footer = new EDB.p5Element();
+    footer.draw = function(p5) {
+      if (intro.arcadeFont !== null && intro.textColor !== null) {
+        p5.fill(intro.textColor);
+        p5.textFont(intro.arcadeFont);
+        p5.textSize(20);
+        p5.noStroke();
+        var footer = "Copyright 2015 Escuela de Bits, GPL Licensed";
+        p5.text(footer, p5.width * .40, p5.height * .97);
+        p5.text('Music by @OzzedNet', p5.width * .01, p5.height * .97);
+      }
+    };
+    this.addElement(footer);
+  };
+  IntroScene.prototype.update = function() {
+    if (this.introMusic.isLoaded() && !this.introMusic.isPlaying()) {
+      this.introMusic.play();
+    }
+    // show press start when ready
+    if (this.ready) {
+
+    }
+
+    return this.nextScene;
+  };
+  IntroScene.prototype.stop = function() {
+    this.introMusic.stop();
+    this.nextScene = this.gameScene;
+  }
+  IntroScene.prototype.keyPressed = function(k) {
+    if (this.ready) {
+      this.stop();
+    }
+  };
+  IntroScene.prototype.mousePressed = function() {
+    if (this.ready) {
+      this.stop();
+      return false;
+    }
+  };
+
   var GameScene = function(p) {
     EDB.Scene.call(this, p, 800, 600);
     this.arcadeFont = null;
@@ -442,7 +519,7 @@
     }
   };
 
-  var game = EDB.createp5Game([GameScene]);
+  var game = EDB.createp5Game([IntroScene]);
   //var game = EDB.createp5Game([PaletteScene]);
   var myp5 = new p5(game);
 })();
