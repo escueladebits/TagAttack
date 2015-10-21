@@ -132,13 +132,20 @@
       p5.stroke(120);
       p5.fill(this.backgroundColor.copy().lighter().p5color(p5));
       p5.text(this.tag.slice(0, this.maxText), this.textX, this.textY);
-    }
+    };
+    TagCanvasElement.prototype.highlight = function() {
+      var tagcanvas = this;
+      this.backgroundColor.lighter();
+      window.setTimeout(function() {
+        tagcanvas.backgroundColor.darker();
+      }, 100);
+    };
     TagCanvasElement.prototype.addElement = function() {
       this.idScene = game.addElement(this) + 1;
     };
     TagCanvasElement.prototype.removeElement = function() {
       game.removeElement(this.idScene);
-    }
+    };
     TagCanvasElement.prototype.getPosition = function(i) {
       return {
         x: this.position.x + game.p5.width * .075 + i * this.deltaX ,
@@ -371,6 +378,7 @@
       this.simpleBell.play();
       var picture = this.librarian.getPicture();
       this.librarian.setPicture(Flickr.Feeder.getTagged().path());
+      this.tagCanvases[this.p5.keyCode].highlight();
       this.tagCanvases[this.p5.keyCode].addPicture(picture);
     }
   };

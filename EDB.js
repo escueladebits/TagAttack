@@ -158,7 +158,11 @@ var EDB = (function() {
         return  color = new palette.ColorCreator(this.index, this.luminance);
       };
       aux.prototype.lighter = function() {
-        this.luminance++;
+        this.luminance = Math.min(this.luminance + 1, colors.length - 1);
+        return this;
+      };
+      aux.prototype.darker = function() {
+        this.luminance = Math.max(this.luminance - 1, 0);
         return this;
       };
       aux.prototype.p5color = function(p5) {
