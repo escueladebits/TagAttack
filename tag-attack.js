@@ -115,7 +115,6 @@
 
   var GameScene = function(p) {
     EDB.Scene.call(this, p, 800, 600);
-    this.arcadeFont = null;
 
     this.nextScene = this;
 
@@ -126,12 +125,14 @@
     {'type': 'sound', 'name': 'music', 'path': 'data/Ozzed_-_8-bit_Party.mp3'},
     {'type': 'sound', 'name': 'simpleBell', 'path': 'data/Pickup_Coin14.wav'},
     {'type': 'sound', 'name': 'successBell', 'path': 'data/Randomize7.wav'},
+    {'type': 'font', 'name': 'arcadeFont', 'path': 'data/04B_03__.TTF'},
   ];
   GameScene.prototype.resourcesList = function() {
     return GameScene.resources;
   };
   GameScene.prototype.start = function() {
     var game = this;
+
     //game.backgroundColor = game.p5.color(0, 0, 15);
     game.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(game.p5);
     game.p5.noSmooth();
@@ -204,7 +205,7 @@
 
       // tag
       p5.textSize(29);
-      p5.textFont(this.font);
+      p5.textFont(game.arcadeFont);
       p5.strokeWeight(2);
       p5.stroke(20);
       p5.fill(this.backgroundColor.copy().lighter().p5color(p5));
@@ -413,6 +414,10 @@
   GameScene.prototype.update = function() {
     EDB.Scene.prototype.update.call(this);
     var game = this;
+    if (game.music.isLoaded() && !game.music.isPlaying()) {
+      game.music.play();
+      game.time0 = game.p5.millis();
+    }
     if (!this.librarian.loaded && Flickr.Feeder.available()) {
       this.librarian.setPicture(Flickr.Feeder.getTagged().path());
     }
