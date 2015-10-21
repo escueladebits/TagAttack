@@ -279,7 +279,11 @@ var EDB = (function() {
 
         p.keyPressed = function() {
           currentScene.keyPressed(p);
-        }
+        };
+
+        p.mousePressed = function() {
+          currentScene.mousePressed();
+        };
       };
     },
 

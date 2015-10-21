@@ -155,6 +155,9 @@
     TagCanvasElement.prototype.addPicture = function(pic) {
       this.pictures.push(pic);
     };
+    TagCanvasElement.prototype.belongs = function(x, y) {
+      return x >= this.position.x && x <= this.position.x + this.width && y >= this.position.y && y <= this.position.y + this.height;
+    };
     function TagCanvasTop() {
       TagCanvasElement.apply(this, arguments);
       this.width = .85 * game.p5.width + 2;
@@ -367,20 +370,38 @@
     });
     return this.nextScene;
   };
+  GameScene.prototype.dismiss = function() {
+    this.librarian.setPicture(Flickr.Feeder.getTagged().path());
+  };
+  GameScene.prototype.assignTag = function(direction) {
+    this.simpleBell.play();
+    var picture = this.librarian.getPicture();
+    this.librarian.setPicture(Flickr.Feeder.getTagged().path());
+    this.tagCanvases[direction].highlight();
+    this.tagCanvases[direction].addPicture(picture);
+  };
   GameScene.prototype.keyPressed = function(k) {
     if (this.librarian && this.librarian.loading) {
       return;
     }
     if (this.p5.key == 'z' || this.p5.key == 'Z') {
-      this.librarian.setPicture(Flickr.Feeder.getTagged().path());
+      this.dismiss();
     }
     if (this.arrows.indexOf(this.p5.keyCode) !== -1) {
-      this.simpleBell.play();
-      var picture = this.librarian.getPicture();
-      this.librarian.setPicture(Flickr.Feeder.getTagged().path());
-      this.tagCanvases[this.p5.keyCode].highlight();
-      this.tagCanvases[this.p5.keyCode].addPicture(picture);
+      this.assignTag(this.p5.keyCode);
     }
+  };
+  GameScene.prototype.mousePressed = function() {
+    if (this.librarian && this.librarian.loading) {
+      return;
+    }
+    for(direction of this.arrows) {
+      if (this.tagCanvases[direction].belongs(this.p5.mouseX, this.p5.mouseY)) {
+        this.assignTag(direction);
+        return;
+      }
+    }
+    this.dismiss();
   };
   GameScene.prototype.stop = function() {
     EDB.Scene.prototype.stop.call(this);
