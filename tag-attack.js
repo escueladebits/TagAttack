@@ -524,7 +524,7 @@
     }
   };
 
-  var game = EDB.createp5Game([IntroScene, GameScene], 0);
+  var game = EDB.createp5Game([IntroScene, GameScene], 1);
   //var game = EDB.createp5Game([PaletteScene]);
   var myp5 = new p5(game);
 })();
