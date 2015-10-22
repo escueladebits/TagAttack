@@ -156,6 +156,7 @@
         p5.text("Tag Attack", p5.width * .10, p5.height * .283);
       }
     };
+    title.depth = 100;
     this.addElement(title);
 
     // footer
@@ -185,6 +186,7 @@
         p5.text("Press <START>", x, y);
       }
     };
+    callToAction.depth = 100;
     this.addElement(callToAction);
 
     this.yuri = new LibrarianSprite(this.p5.width, this.p5.height * .8);
