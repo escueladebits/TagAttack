@@ -83,15 +83,25 @@
       }
     };
     this.addElement(footer);
+
+    var callToAction = new EDB.p5Element();
+    callToAction.draw = function(p5) {
+      if (intro.arcadeFont !== null) {
+        var blinkColor = new EDB.NESPalette.ColorCreator(1 + Math.floor(13 * Math.random()), Math.floor(3 * Math.random()));
+        p5.fill(blinkColor.p5color(p5));
+        var x = p5.width * .32;
+        var y = p5.height * .47;
+        p5.textFont(intro.arcadeFont);
+        p5.textSize(40);
+        p5.text("Press <START>", x, y);
+      }
+    };
+    this.addElement(callToAction);
   };
   IntroScene.prototype.update = function() {
     EDB.Scene.prototype.update.call(this);
     if (this.introMusic.isLoaded() && !this.introMusic.isPlaying()) {
       this.introMusic.play();
-    }
-    // show press start when ready
-    if (this.ready) {
-
     }
 
     return this.nextScene;
@@ -102,15 +112,13 @@
     this.nextScene.resourceManager = this.resourceManager;
   }
   IntroScene.prototype.keyPressed = function(k) {
-    if (this.ready) {
+    if (this.p5.key == 'z' || this.p5.key == 'Z') {
       this.stop();
     }
   };
   IntroScene.prototype.mousePressed = function() {
-    if (this.ready) {
       this.stop();
       return false;
-    }
   };
 
   var GameScene = function(p) {
