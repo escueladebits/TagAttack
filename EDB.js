@@ -318,7 +318,7 @@ var EDB = (function() {
 
         p.setup = function() {
           p.createCanvas(currentScene.width, currentScene.height);
-
+          p.noSmooth();
           for (scene of scenes) {
             for (r of scene.resources) {
               resources.load(r.type, r.name, r.path);
