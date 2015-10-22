@@ -14,55 +14,7 @@
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-var Flickr = (function() {
-  // Based in flickr API method: flickr.people.getPhotos
-  // https://www.flickr.com/services/api/explore/flickr.people.getPublicPhotos
-  var local = false;
-
-  var jsonResponse = null;
-
-  if (!local) {
-    var httpRequest = new XMLHttpRequest();
-    httpRequest.onreadystatechange = function() {
-      if (httpRequest.readyState === 4) {
-        if (httpRequest.status === 200) {
-          jsonResponse = JSON.parse(httpRequest.responseText);
-        }
-      }
-    };
-    var page = Math.floor(1001 * Math.random());
-    httpRequest.open('GET', 'https://api.flickr.com/services/rest/?method=flickr.people.getPublicPhotos&api_key=588ed2f326df81d5a7382e1bf64da098&user_id=12403504%40N02&safe_search=1&per_page=1024&page='+page+'&format=json&nojsoncallback=1', true);
-    httpRequest.send(null);
-  }
-
-  FlickrFeeder = {
-    available : function() {
-    return local || jsonResponse !== null;
-    },
-    getTagged: function() {
-      if (local) {
-        return new FlickrPhoto('11283386124,https://flickr.com/photos/britishlibrary/11283386124,portrait,https://farm8.staticflickr.com/7362/11283386124_dfe1b160a5_q.jpg,https://farm8.staticflickr.com/7362/11283386124_dfe1b160a5_m.jpg,https://farm8.staticflickr.com/7362/11283386124_dfe1b160a5.jpg,https://farm8.staticflickr.com/7362/11283386124_dfe1b160a5_b.jpg');
-      } else {
-        if (jsonResponse !== null && jsonResponse.photos.photo.length > 0) {
-          return new FlickrPhoto2(jsonResponse.photos.photo.shift());
-        }
-      }
-    },
-    getUntagged: function() {
-      if (local) {
-        return new FlickrPhoto('11252771705,https://flickr.com/photos/britishlibrary/11252771705,UNTAGGED,https://farm4.staticflickr.com/3718/11252771705_65d8525c1d_q.jpg,https://farm4.staticflickr.com/3718/11252771705_65d8525c1d_m.jpg,https://farm4.staticflickr.com/3718/11252771705_65d8525c1d.jpg,https://farm4.staticflickr.com/3718/11252771705_65d8525c1d_b.jpg');
-      } else {
-        if (jsonResponse !== null && jsonResponse.photos.photo.length > 0) {
-          return new FlickrPhoto2(jsonResponse.photos.photo.shift());
-        }
-      }
-    },
-    push: function(photo) {
-
-    },
-  };
-
+var FlickrFeeder = (function() {
   function FlickrPhoto2 (json) {
     this.farm = json.farm;
     this.id = json.id;
@@ -72,6 +24,8 @@ var Flickr = (function() {
     this.secret = json.secret;
     this.server = json.server;
     this.title = json.title;
+
+    this.tags = json.tags.split(' ');
   }
   FlickrPhoto2.prototype.path = function() {
     var url = 'https://farm' + this.farm + '.staticflickr.com/' + this.server;
@@ -100,7 +54,62 @@ var Flickr = (function() {
     return p;
   };
 
-  return {
-    Feeder: FlickrFeeder,
+  var local = false;
+  var FlickrFeeder = function FlickrFeeder(tags) {
+    // Based in flickr API method: flickr.people.getPhotos
+    // https://www.flickr.com/services/api/explore/flickr.people.getPublicPhotos
+    var feeder = this;
+    this.jsonResponse = null;
+
+    tags = _.map(tags, 'tag');
+
+    if (!local) {
+      var httpRequest = new XMLHttpRequest();
+      httpRequest.onreadystatechange = function() {
+        if (httpRequest.readyState === 4) {
+          if (httpRequest.status === 200) {
+            feeder.jsonResponse = JSON.parse(httpRequest.responseText);
+            feeder.jsonResponse.photos.photo = _.shuffle(feeder.jsonResponse.photos.photo);
+            feeder.tagged = _.filter(feeder.jsonResponse.photos.photo, function(flickrPicture) {
+              return _.some(tags, function(tag) { return flickrPicture.tags.indexOf(tag) !== -1; });
+            });
+            feeder.untagged = _.filter(feeder.jsonResponse.photos.photo, function(flickrPicture) {
+              return _.every(tags, function(tag) { return flickrPicture.tags.indexOf(tag) === -1; });
+            });
+          }
+        }
+      };
+      var page = Math.floor(1001 * Math.random());
+      httpRequest.open('GET', 'https://api.flickr.com/services/rest/?method=flickr.people.getPublicPhotos&api_key=588ed2f326df81d5a7382e1bf64da098&user_id=12403504%40N02&extras=tags&safe_search=1&per_page=1024&page='+page+'&format=json&nojsoncallback=1', true);
+      httpRequest.send(null);
+    }
+
   }
+  FlickrFeeder.prototype.available = function() {
+    return local || this.jsonResponse !== null;
+  };
+  FlickrFeeder.prototype.getTagged = function() {
+    if (local) {
+      return new FlickrPhoto('11283386124,https://flickr.com/photos/britishlibrary/11283386124,portrait,https://farm8.staticflickr.com/7362/11283386124_dfe1b160a5_q.jpg,https://farm8.staticflickr.com/7362/11283386124_dfe1b160a5_m.jpg,https://farm8.staticflickr.com/7362/11283386124_dfe1b160a5.jpg,https://farm8.staticflickr.com/7362/11283386124_dfe1b160a5_b.jpg');
+    } else {
+      if (this.jsonResponse !== null && this.tagged.length > 0) {
+        //return new FlickrPhoto2(jsonResponse.photos.photo.shift());
+        var img = new FlickrPhoto2(this.tagged.shift());
+        return img;
+      }
+    }
+  };
+  FlickrFeeder.prototype.getUntagged = function() {
+    if (local) {
+      return new FlickrPhoto('11252771705,https://flickr.com/photos/britishlibrary/11252771705,UNTAGGED,https://farm4.staticflickr.com/3718/11252771705_65d8525c1d_q.jpg,https://farm4.staticflickr.com/3718/11252771705_65d8525c1d_m.jpg,https://farm4.staticflickr.com/3718/11252771705_65d8525c1d.jpg,https://farm4.staticflickr.com/3718/11252771705_65d8525c1d_b.jpg');
+    } else {
+      if (this.jsonResponse !== null && this.untagged.length > 0) {
+        //return new FlickrPhoto2(jsonResponse.photos.photo.shift());
+        var img = new FlickrPhoto2(this.untagged.shift());
+        return img;
+      }
+    }
+  };
+
+  return FlickrFeeder;
 })();

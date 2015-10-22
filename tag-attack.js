@@ -29,6 +29,8 @@
     {tag: 'cycling', index: 12, lum: 2,},
   ];
 
+  var flickrFeeder = new FlickrFeeder(tags);
+
   var selectedTags = _.sortBy(tags, function() { return Math.random();}).slice(0,4);
   selectedTags = _.sortBy(selectedTags, function(t) { return 1 / t.tag.length;});
   var usedTags = [];
@@ -196,10 +198,10 @@
     if (this.introMusic.isLoaded() && !this.introMusic.isPlaying()) {
       this.introMusic.play();
     }
-    if (!this.yuri.loaded && Flickr.Feeder.available() && !this.yuri.loading) {
+    if (!this.yuri.loaded && flickrFeeder.available() && !this.yuri.loading) {
       var yuri = this.yuri;
       var intro = this;
-      var path = Flickr.Feeder.getTagged().path();
+      var path = flickrFeeder.getTagged().path();
       this.yuri.setPicture(path).then(function() {
         if (!yuri.loaded) {
           yuri.setVelocity(-2);
@@ -210,7 +212,6 @@
     if (this.walkingLeft && this.yuri.tooLeft(this.p5) || this.walkingLeft === false && this.yuri.tooRight(this.p5)) {
       this.walkingLeft = !this.walkingLeft;
       this.yuri.setVelocity(-this.yuri.getVelocity());
-      console.log(this.yuri);
     }
 
     return this.nextScene;
@@ -451,9 +452,9 @@
       game.music.play();
       game.time0 = game.p5.millis();
     }
-    if (!this.librarian.loaded && Flickr.Feeder.available()) {
+    if (!this.librarian.loaded && flickrFeeder.available()) {
       var librarian = this.librarian;
-      var path = Flickr.Feeder.getTagged().path();
+      var path = flickrFeeder.getTagged().path();
       this.librarian.setPicture(path).then(function() {
         if (!librarian.loaded) {
           librarian.addElements(game);
@@ -461,7 +462,7 @@
       });
     }
     if (this.librarian.tooLeft(this.p5)) {
-      this.librarian.setPicture(Flickr.Feeder.getUntagged().path());
+      this.librarian.setPicture(flickrFeeder.getUntagged().path());
     }
     this.secs = (this.p5.millis() - this.time0) / 1000;
     if (this.secs >= this.music.duration()) {
@@ -492,12 +493,12 @@
     return this.nextScene;
   };
   GameScene.prototype.dismiss = function() {
-    this.librarian.setPicture(Flickr.Feeder.getTagged().path());
+    this.librarian.setPicture(flickrFeeder.getTagged().path());
   };
   GameScene.prototype.assignTag = function(direction) {
     this.simpleBell.play();
     var picture = this.librarian.getPicture();
-    this.librarian.setPicture(Flickr.Feeder.getTagged().path());
+    this.librarian.setPicture(flickrFeeder.getTagged().path());
     this.tagCanvases[direction].highlight();
     this.tagCanvases[direction].addPicture(picture);
   };
