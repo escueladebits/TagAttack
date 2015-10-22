@@ -33,6 +33,87 @@
   selectedTags = _.sortBy(selectedTags, function(t) { return 1 / t.tag.length;});
   var usedTags = [];
 
+  function LibrarianSprite(x, y) {
+    var librarian = this;
+    var yuriSprite = new EDB.p5Sprite();
+    var yuriAnimation = [
+      'data/yuriWalking_1.png',
+      'data/yuriWalking_2.png',
+      'data/yuriWalking_3.png',
+      'data/yuriWalking_4.png',
+    ];
+    var promiseAnimation = yuriSprite.loadAnimation(yuriAnimation);
+    yuriSprite.scale = 2;
+    yuriSprite.depth = 2;
+
+    var picture = new EDB.p5Sprite();
+    picture.scale = 1;
+    picture.depth = 1;
+
+    var init = function() {
+      var yuriImg = yuriSprite.img;
+      var pictureImg = picture.img;
+      var position = {
+        x : x,
+        y : y,
+      };
+      var velocity = {
+        x : -8,
+        y : 0,
+      }
+      yuriSprite.position.x = position.x;
+      yuriSprite.position.y = position.y;
+      picture.position.x = position.x;
+      picture.position.y = position.y - yuriImg.height * .5 * yuriSprite.scale - pictureImg.height * .5 * picture.scale + 10 * picture.scale;
+      yuriSprite.velocity = velocity;
+      picture.velocity = velocity;
+    };
+
+    this.loaded = false;
+    this.loading = false;
+
+    this.setPicture = function(picturePath) {
+      if (!this.loading) {
+        this.loading = true;
+        var promisePicture = EDB.loadEDBImage(picturePath);
+        if (picture.img !== null) {
+          init();
+          this.pause();
+        }
+        return Promise.all([promiseAnimation, promisePicture]).then(function(results) {
+          picture.img = results[1];
+          librarian.loading = false;
+          init();
+        });
+      }
+      else {
+        return new Promise(function(response, reject) { reject(); });
+      }
+    };
+    this.addElements = function(scene) {
+      scene.addElement(yuriSprite);
+      scene.addElement(picture);
+      this.loaded = true;
+    };
+    this.pause = function() {
+      yuriSprite.velocity = picture.velocity = {
+        x : 0,
+        y : 0,
+      };
+    };
+    this.getPicture = function() {
+      if (!this.loading && picture.img !== null) {
+        return picture.img;
+      }
+      else {
+        return null;
+      }
+    };
+    this.outOfScope = function() {
+      return yuriSprite.position.x < 0;
+    };
+  };
+
   var IntroScene = function(p) {
     EDB.Scene.call(this, p, 800, 600);
     this.textColor = null;
@@ -330,91 +411,7 @@
       game.tagCanvases[direction].addElement();
     });
 
-    function LibrarianSprite() {
-      var librarian = this;
-      var yuriSprite = new EDB.p5Sprite();
-      var yuriAnimation = [
-        'data/yuriWalking_1.png',
-        'data/yuriWalking_2.png',
-        'data/yuriWalking_3.png',
-        'data/yuriWalking_4.png',
-      ];
-      var promiseAnimation = yuriSprite.loadAnimation(yuriAnimation);
-      yuriSprite.scale = 2;
-      yuriSprite.depth = 2;
-
-      var picture = new EDB.p5Sprite();
-      picture.scale = 1;
-      picture.depth = 1;
-
-      var init = function() {
-        var yuriImg = yuriSprite.img;
-        var pictureImg = picture.img;
-        var position = {
-          x : game.p5.width,
-          y : game.p5.height * .7,
-        };
-        var velocity = {
-          x : -8,
-          y : 0,
-        }
-        yuriSprite.position.x = position.x;
-        yuriSprite.position.y = position.y;
-        picture.position.x = position.x;
-        picture.position.y = position.y - yuriImg.height * .5 * yuriSprite.scale - pictureImg.height * .5 * picture.scale + 10 * picture.scale;
-        yuriSprite.velocity = velocity;
-        picture.velocity = velocity;
-      };
-
-      librarian.loaded = false;
-
-      librarian.loading = false;
-
-      yuriKey = pictureKey = -1;
-
-      this.setPicture = function(picturePath) {
-        if (!librarian.loading) {
-          librarian.loading = true;
-          var promisePicture = EDB.loadEDBImage(picturePath);
-          if (picture.img !== null) {
-            init();
-            this.pause();
-          }
-          Promise.all([promiseAnimation, promisePicture]).then(function(results) {
-            picture.img = results[1];
-            librarian.loading = false;
-            init();
-            if (!librarian.loaded) {
-              game.addElement(yuriSprite);
-              game.addElement(picture);
-              librarian.loaded = true;
-            }
-          });
-        }
-      };
-
-      this.pause = function() {
-        yuriSprite.velocity = picture.velocity = {
-          x : 0,
-          y : 0,
-        };
-      };
-
-      this.getPicture = function() {
-        if (!librarian.loading && picture.img !== null) {
-          return picture.img;
-        }
-        else {
-          return null;
-        }
-      };
-
-      this.outOfScope = function() {
-        return yuriSprite.position.x < 0;
-      };
-    };
-
-    game.librarian = new LibrarianSprite();
+    game.librarian = new LibrarianSprite(game.p5.width, game.p5.height * .7);
     var x = game.p5.width * .15;
     game.clock = new Clock(game.music, x + 2, x + 10, game.p5.width - x *2 - 4);
     game.addElement(game.clock);
@@ -427,7 +424,13 @@
       game.time0 = game.p5.millis();
     }
     if (!this.librarian.loaded && Flickr.Feeder.available()) {
-      this.librarian.setPicture(Flickr.Feeder.getTagged().path());
+      var librarian = this.librarian;
+      var path = Flickr.Feeder.getTagged().path();
+      this.librarian.setPicture(path).then(function() {
+        if (!librarian.loaded) {
+          librarian.addElements(game);
+        }
+      });
     }
     if (this.librarian.outOfScope()) {
       this.librarian.setPicture(Flickr.Feeder.getUntagged().path());
