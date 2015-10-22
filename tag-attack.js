@@ -35,83 +35,89 @@
 
   function LibrarianSprite(x, y) {
     var librarian = this;
-    var yuriSprite = new EDB.p5Sprite();
+    this.x = x;
+    this.y = y;
+    this.yuriSprite = new EDB.p5Sprite();
     var yuriAnimation = [
       'data/yuriWalking_1.png',
       'data/yuriWalking_2.png',
       'data/yuriWalking_3.png',
       'data/yuriWalking_4.png',
     ];
-    var promiseAnimation = yuriSprite.loadAnimation(yuriAnimation);
-    yuriSprite.scale = 2;
-    yuriSprite.depth = 2;
+    var promiseAnimation = this.yuriSprite.loadAnimation(yuriAnimation);
+    this.yuriSprite.scale = 2;
+    this.yuriSprite.depth = 2;
 
-    var picture = new EDB.p5Sprite();
-    picture.scale = 1;
-    picture.depth = 1;
-
-    var init = function() {
-      var yuriImg = yuriSprite.img;
-      var pictureImg = picture.img;
-      var position = {
-        x : x,
-        y : y,
-      };
-      var velocity = {
-        x : -8,
-        y : 0,
-      }
-      yuriSprite.position.x = position.x;
-      yuriSprite.position.y = position.y;
-      picture.position.x = position.x;
-      picture.position.y = position.y - yuriImg.height * .5 * yuriSprite.scale - pictureImg.height * .5 * picture.scale + 10 * picture.scale;
-      yuriSprite.velocity = velocity;
-      picture.velocity = velocity;
-    };
+    this.picture = new EDB.p5Sprite();
+    this.picture.scale = 1;
+    this.picture.depth = 1;
 
     this.loaded = false;
     this.loading = false;
 
+    this.init = function() {
+      var yuriImg = this.yuriSprite.img;
+      var pictureImg = this.picture.img;
+      var position = {
+        x : x,
+        y : y,
+      };
+      this.yuriSprite.position = position;
+      this.picture.position.x = position.x;
+      this.picture.position.y = position.y - yuriImg.height * .5 * this.yuriSprite.scale - pictureImg.height * .5 * this.picture.scale + 10 * this.picture.scale;
+      this.setVelocity(-8);
+    };
     this.setPicture = function(picturePath) {
+      var librarian = this;
       if (!this.loading) {
         this.loading = true;
         var promisePicture = EDB.loadEDBImage(picturePath);
-        if (picture.img !== null) {
-          init();
+        if (this.picture.img !== null) {
+          this.init();
           this.pause();
         }
         return Promise.all([promiseAnimation, promisePicture]).then(function(results) {
-          picture.img = results[1];
+          librarian.picture.img = results[1];
           librarian.loading = false;
-          init();
+          librarian.init();
         });
       }
       else {
         return new Promise(function(response, reject) { reject(); });
       }
     };
-    this.addElements = function(scene) {
-      scene.addElement(yuriSprite);
-      scene.addElement(picture);
-      this.loaded = true;
-    };
-    this.pause = function() {
-      yuriSprite.velocity = picture.velocity = {
-        x : 0,
-        y : 0,
-      };
-    };
-    this.getPicture = function() {
-      if (!this.loading && picture.img !== null) {
-        return picture.img;
-      }
-      else {
-        return null;
-      }
-    };
-    this.outOfScope = function() {
-      return yuriSprite.position.x < 0;
-    };
+  }
+  LibrarianSprite.prototype.setVelocity = function(v) {
+    this.yuriSprite.velocity = this.picture.velocity = {
+      x: v,
+      y: 0,
+    }
+  };
+  LibrarianSprite.prototype.getVelocity = function() {
+    return this.yuriSprite.velocity.x;
+  };
+
+  LibrarianSprite.prototype.addElements = function(scene) {
+    scene.addElement(this.yuriSprite);
+    scene.addElement(this.picture);
+    this.loaded = true;
+  };
+  LibrarianSprite.prototype.pause = function() {
+    this.setVelocity(0);
+  };
+  LibrarianSprite.prototype.getPicture = function() {
+    if (!this.loading && this.picture.img !== null) {
+      return this.picture.img;
+    }
+    else {
+      return null;
+    }
+  };
+  LibrarianSprite.prototype.tooLeft = function(p5) {
+    return this.yuriSprite.position.x < 0;
+  };
+  LibrarianSprite.prototype.tooRight = function(p5) {
+    return this.yuriSprite.position.x > p5.width;
   };
 
   var IntroScene = function(p) {
@@ -121,6 +127,8 @@
     this.gameScene = new GameScene(p);
     this.nextScene = this;
     this.ready = false;
+
+    this.walkingLeft = true;
   };
   IntroScene.prototype = Object.create(EDB.Scene.prototype);
 
@@ -178,11 +186,29 @@
       }
     };
     this.addElement(callToAction);
+
+    this.yuri = new LibrarianSprite(this.p5.width, this.p5.height * .8);
   };
   IntroScene.prototype.update = function() {
     EDB.Scene.prototype.update.call(this);
     if (this.introMusic.isLoaded() && !this.introMusic.isPlaying()) {
       this.introMusic.play();
+    }
+    if (!this.yuri.loaded && Flickr.Feeder.available() && !this.yuri.loading) {
+      var yuri = this.yuri;
+      var intro = this;
+      var path = Flickr.Feeder.getTagged().path();
+      this.yuri.setPicture(path).then(function() {
+        if (!yuri.loaded) {
+          yuri.setVelocity(-2);
+          yuri.addElements(intro);
+        }
+      });
+    }
+    if (this.walkingLeft && this.yuri.tooLeft(this.p5) || this.walkingLeft === false && this.yuri.tooRight(this.p5)) {
+      this.walkingLeft = !this.walkingLeft;
+      this.yuri.setVelocity(-this.yuri.getVelocity());
+      console.log(this.yuri);
     }
 
     return this.nextScene;
@@ -432,7 +458,7 @@
         }
       });
     }
-    if (this.librarian.outOfScope()) {
+    if (this.librarian.tooLeft(this.p5)) {
       this.librarian.setPicture(Flickr.Feeder.getUntagged().path());
     }
     this.secs = (this.p5.millis() - this.time0) / 1000;
