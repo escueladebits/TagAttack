@@ -237,6 +237,7 @@
     this.nextScene = this;
 
     this.arrows = [p.UP_ARROW, p.DOWN_ARROW, p.LEFT_ARROW, p.RIGHT_ARROW];
+    this.dismissedInARow = 0;
   };
   GameScene.prototype = Object.create(EDB.Scene.prototype);
   GameScene.resources = [
@@ -498,6 +499,28 @@
   };
   GameScene.prototype.dismiss = function() {
     this.librarian.setPicture(flickrFeeder.getTagged().path());
+    this.usedImages++;
+    this.dismissedInARow++;
+    if (this.dismissedInARow >= 5) {
+      this.dismissedInARow = 0;
+      var removables = [];
+      var minLength = _.reduce(this.tagCanvases, function(memo, tc) {
+        if (tc !== undefined) {
+          return Math.min(memo, tc.pictures.length);
+        }
+        else {
+          return memo;
+        }
+
+      }, 100);
+      for (d of this.arrows) {
+        if (this.tagCanvases[d].pictures.length === minLength) {
+          removables.push(d);
+        }
+      }
+      var direction = _.sample(removables);
+      this.substituteCanvas(direction);
+    }
   };
   GameScene.prototype.assignTag = function(direction) {
     this.simpleBell.play();
