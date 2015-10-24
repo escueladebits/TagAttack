@@ -206,7 +206,7 @@
     if (!this.yuri.loaded && flickrFeeder.available() && !this.yuri.loading) {
       var yuri = this.yuri;
       var intro = this;
-      var path = flickrFeeder.getTagged().path();
+      var path = flickrFeeder.getUntagged().path();
       this.yuri.setPicture(path).then(function() {
         if (!yuri.loaded) {
           yuri.setVelocity(-2);
@@ -496,7 +496,7 @@
     }
     if (!this.librarian.loaded && flickrFeeder.available()) {
       var librarian = this.librarian;
-      var path = flickrFeeder.getTagged().path();
+      var path = this.getNextImage();
       this.librarian.setPicture(path).then(function() {
         if (!librarian.loaded) {
           librarian.addElements(game);
@@ -504,7 +504,7 @@
       });
     }
     if (this.librarian.tooLeft(this.p5)) {
-      this.librarian.setPicture(flickrFeeder.getUntagged().path());
+      this.librarian.setPicture(this.getNextImage());
     }
     this.secs = (this.p5.millis() - this.time0) / 1000;
     if (this.secs >= this.music.duration()) {
@@ -534,9 +534,25 @@
         source = flickrFeeder.getUntagged();
       }
     }
+    this.currentFlickrPicture = source;
     return source.path();
   };
+  GameScene.prototype.positiveTagging = function() {
+    this.performanceRatio++;
+  };
+  GameScene.prototype.negativeTagging = function() {
+    this.performanceRatio = this.performanceRatio === 1 ? 1 : Math.floor(this.performanceRatio / 2);
+    // play sound
+  }
   GameScene.prototype.dismiss = function() {
+    if (this.untaggedInARow === 0) {
+      if (_.intersection(_.map(selectedTags, 'tag'), this.currentFlickrPicture.tags).length === 0) {
+        this.positiveTagging();
+      }
+      else {
+        this.negativeTagging();
+      }
+    }
     this.librarian.setPicture(this.getNextImage());
     this.usedImages++;
     this.dismissedInARow++;
@@ -562,6 +578,15 @@
     }
   };
   GameScene.prototype.assignTag = function(direction) {
+    if (this.untaggedInARow === 0) {
+      var chosenTag = this.tagCanvases[direction].tag;
+      if (this.currentFlickrPicture.tags.indexOf(chosenTag) !== -1) {
+        this.positiveTagging();
+      }
+      else {
+        this.negativeTagging();
+      }
+    }
     this.simpleBell.play();
     var picture = this.librarian.getPicture();
     this.librarian.setPicture(this.getNextImage());
