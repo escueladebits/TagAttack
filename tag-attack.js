@@ -245,6 +245,7 @@
     {'type': 'sound', 'name': 'simpleBell', 'path': 'data/Pickup_Coin14.wav'},
     {'type': 'sound', 'name': 'successBell', 'path': 'data/Randomize7.wav'},
     {'type': 'font', 'name': 'arcadeFont', 'path': 'data/04B_03__.TTF'},
+    {'type': 'sound', 'name': 'dismissSound', 'path': 'data/Jump6.wav'},
   ];
   GameScene.prototype.resourcesList = function() {
     return GameScene.resources;
@@ -501,6 +502,7 @@
     this.librarian.setPicture(flickrFeeder.getTagged().path());
     this.usedImages++;
     this.dismissedInARow++;
+    this.dismissSound.play();
     if (this.dismissedInARow >= 5) {
       this.dismissedInARow = 0;
       var removables = [];
@@ -528,6 +530,7 @@
     this.librarian.setPicture(flickrFeeder.getTagged().path());
     this.tagCanvases[direction].highlight();
     this.tagCanvases[direction].addPicture(picture);
+    this.dismissedInARow = 0;
   };
   GameScene.prototype.keyPressed = function(k) {
     if (this.librarian && this.librarian.loading) {
