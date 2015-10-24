@@ -126,7 +126,6 @@
     EDB.Scene.call(this, p, 800, 600);
     this.textColor = null;
 
-    this.gameScene = new GameScene(p);
     this.nextScene = this;
     this.ready = false;
 
@@ -142,6 +141,9 @@
     return IntroScene.resources;
   }
   IntroScene.prototype.start = function() {
+    EDB.Scene.prototype.start.call(this);
+    this.gameScene = new GameScene(this.p5);
+
     var intro = this;
     this.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(this.p5);
 
@@ -195,6 +197,9 @@
   };
   IntroScene.prototype.update = function() {
     EDB.Scene.prototype.update.call(this);
+    if (this.stopped) {
+      return this.nextScene;
+    }
     if (this.introMusic.isLoaded() && !this.introMusic.isPlaying()) {
       this.introMusic.play();
     }
@@ -217,10 +222,11 @@
     return this.nextScene;
   };
   IntroScene.prototype.stop = function() {
+    EDB.Scene.prototype.stop.call(this);
     this.introMusic.stop();
     this.nextScene = this.gameScene;
     this.nextScene.resourceManager = this.resourceManager;
-  }
+  };
   IntroScene.prototype.keyPressed = function(k) {
     if (this.p5.key == 'z' || this.p5.key == 'Z') {
       this.stop();
@@ -229,6 +235,9 @@
   IntroScene.prototype.mousePressed = function() {
       this.stop();
       return false;
+  };
+  IntroScene.prototype.reinit = function() {
+    this.nextScene = this;
   };
 
   var GameScene = function(p) {
@@ -251,6 +260,11 @@
     return GameScene.resources;
   };
   GameScene.prototype.start = function() {
+    EDB.Scene.prototype.start.call(this);
+
+    this.introScene = new IntroScene(this.p5);
+    this.introScene.resourceManager = this.resourceManager;
+
     var game = this;
 
     //game.backgroundColor = game.p5.color(0, 0, 15);
@@ -470,6 +484,9 @@
   };
   GameScene.prototype.update = function() {
     EDB.Scene.prototype.update.call(this);
+    if (this.stopped) {
+      return this.nextScene;
+    }
     var game = this;
     if (game.music.isLoaded() && !game.music.isPlaying()) {
       game.music.play();
@@ -513,7 +530,6 @@
         else {
           return memo;
         }
-
       }, 100);
       for (d of this.arrows) {
         if (this.tagCanvases[d].pictures.length === minLength) {
@@ -558,7 +574,11 @@
   GameScene.prototype.stop = function() {
     EDB.Scene.prototype.stop.call(this);
     this.music.stop();
-    this.nextScene = null;
+    console.log('GAME OVA', this.introScene);
+    this.nextScene = this.introScene;
+  };
+  GameScene.prototype.reinit = function() {
+    this.nextScene = this;
   };
 
   function PaletteScene(p) {
@@ -566,6 +586,7 @@
   }
   PaletteScene.prototype = Object.create(EDB.Scene.prototype);
   PaletteScene.prototype.start = function() {
+    EDB.Scene.prototype.start.call(this);
     var scene = this;
     function Panel(x, y, index, luminance) {
       EDB.p5Element.call(this);

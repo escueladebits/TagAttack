@@ -126,6 +126,7 @@ var EDB = (function() {
     this.height = height;
     this.p5 = p;
     this.backgroundColor = 0;
+    this.stopped = false;
 
     this.resourceManager = null;
 
@@ -152,13 +153,6 @@ var EDB = (function() {
     _.each(this.getElements(), function(e) {
         if (e !== null) { e.update();}
     });
-    for (r of this.resourcesList()) {
-      if (this[r.name] === undefined && !r.loading) {
-
-        r.loading = true;
-        this[r.name] = this.resourceManager.getValue(r.name);
-      }
-    }
     return this;
   };
   Scene.prototype.draw = function() {
@@ -170,8 +164,15 @@ var EDB = (function() {
       }
     });
   };
-  Scene.prototype.start = function() {};
-  Scene.prototype.stop = function() {};
+  Scene.prototype.start = function() {
+    this.stopped = false;
+    for (r of this.resourcesList()) {
+      this[r.name] = this.resourceManager.getValue(r.name);
+    }
+  };
+  Scene.prototype.stop = function() {
+    this.stopped = true;
+  };
   Scene.prototype.keyPressed = function(k) {};
   //Scene.prototype.preload = function() {};
 
@@ -335,7 +336,7 @@ var EDB = (function() {
           if (!ready) return;
           var newScene = currentScene.update();
           if (newScene !== currentScene) {
-            currentScene.stop();
+            currentScene.reinit();
             newScene.start();
             currentScene = newScene;
           }
