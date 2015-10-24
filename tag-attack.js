@@ -247,6 +247,8 @@
 
     this.arrows = [p.UP_ARROW, p.DOWN_ARROW, p.LEFT_ARROW, p.RIGHT_ARROW];
     this.dismissedInARow = 0;
+    this.untaggedInARow = 0;
+    this.performanceRatio = 1;
   };
   GameScene.prototype = Object.create(EDB.Scene.prototype);
   GameScene.resources = [
@@ -515,8 +517,27 @@
     });
     return this.nextScene;
   };
+  GameScene.prototype.getNextImage = function() {
+    var source = null;
+    if (this.untaggedInARow++ < this.performanceRatio) {
+      this.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(this.p5);
+      source = flickrFeeder.getUntagged();
+    }
+    else {
+      this.untaggedInARow = 0;
+      if (flickrFeeder.taggedAvailable()) {
+        this.backgroundColor = (new EDB.NESPalette.ColorCreator(4, 3)).p5color(this.p5);
+        source = flickrFeeder.getTagged();
+      }
+      else {
+        this.backgroundColor = (new EDB.NESPalette.ColorCreator(13, 3)).p5color(this.p5);
+        source = flickrFeeder.getUntagged();
+      }
+    }
+    return source.path();
+  };
   GameScene.prototype.dismiss = function() {
-    this.librarian.setPicture(flickrFeeder.getTagged().path());
+    this.librarian.setPicture(this.getNextImage());
     this.usedImages++;
     this.dismissedInARow++;
     this.dismissSound.play();
@@ -543,7 +564,7 @@
   GameScene.prototype.assignTag = function(direction) {
     this.simpleBell.play();
     var picture = this.librarian.getPicture();
-    this.librarian.setPicture(flickrFeeder.getTagged().path());
+    this.librarian.setPicture(this.getNextImage());
     this.tagCanvases[direction].highlight();
     this.tagCanvases[direction].addPicture(picture);
     this.dismissedInARow = 0;
@@ -574,7 +595,6 @@
   GameScene.prototype.stop = function() {
     EDB.Scene.prototype.stop.call(this);
     this.music.stop();
-    console.log('GAME OVA', this.introScene);
     this.nextScene = this.introScene;
   };
   GameScene.prototype.reinit = function() {

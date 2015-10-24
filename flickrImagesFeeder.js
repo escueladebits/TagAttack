@@ -88,6 +88,9 @@ var FlickrFeeder = (function() {
   FlickrFeeder.prototype.available = function() {
     return local || this.jsonResponse !== null;
   };
+  FlickrFeeder.prototype.taggedAvailable = function() {
+    return this.tagged.length > 0;
+  };
   FlickrFeeder.prototype.getTagged = function() {
     if (local) {
       return new FlickrPhoto('11283386124,https://flickr.com/photos/britishlibrary/11283386124,portrait,https://farm8.staticflickr.com/7362/11283386124_dfe1b160a5_q.jpg,https://farm8.staticflickr.com/7362/11283386124_dfe1b160a5_m.jpg,https://farm8.staticflickr.com/7362/11283386124_dfe1b160a5.jpg,https://farm8.staticflickr.com/7362/11283386124_dfe1b160a5_b.jpg');
