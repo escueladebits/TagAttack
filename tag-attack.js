@@ -445,6 +445,27 @@
     game.clock = new Clock(game.music, x + 2, x + 10, game.p5.width - x *2 - 4);
     game.addElement(game.clock);
   };
+  GameScene.prototype.substituteCanvas = function(direction) {
+    var game = this;
+    if (selectedTags.length + usedTags.length === tags.length) {
+      usedTags = [];
+    }
+
+    var oldTag = _.find(selectedTags, function(tc) {
+      return tc.tag == game.tagCanvases[direction].tag;
+    });
+    usedTags.push(oldTag);
+    var oldIndex = selectedTags.indexOf(oldTag);
+    selectedTags.splice(oldIndex, 1);
+    var newTag = _.sample(_.filter(tags, function(tc) {
+      return selectedTags.indexOf(tc) === -1 && usedTags.indexOf(tc) === -1;
+    }));
+    selectedTags.push(newTag);
+
+    this.successBell.play();
+
+    this.changeTagCanvas(direction, newTag);
+  };
   GameScene.prototype.update = function() {
     EDB.Scene.prototype.update.call(this);
     var game = this;
@@ -470,24 +491,7 @@
     }
     _.each(this.arrows, function(arrow) {
       if (game.tagCanvases[arrow].full()) {
-        if (selectedTags.length + usedTags.length === tags.length) {
-          usedTags = [];
-        }
-
-        var oldTag = _.find(selectedTags, function(tc) {
-          return tc.tag == game.tagCanvases[arrow].tag;
-        });
-        usedTags.push(oldTag);
-        var oldIndex = selectedTags.indexOf(oldTag);
-        selectedTags.splice(oldIndex, 1);
-        var newTag = _.sample(_.filter(tags, function(tc) {
-          return selectedTags.indexOf(tc) === -1 && usedTags.indexOf(tc) === -1;
-        }));
-        selectedTags.push(newTag);
-
-        game.successBell.play();
-
-        game.changeTagCanvas(arrow, newTag);
+        game.substituteCanvas(arrow);
       }
     });
     return this.nextScene;
