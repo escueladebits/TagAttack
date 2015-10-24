@@ -76,11 +76,18 @@ var FlickrFeeder = (function() {
             feeder.untagged = _.filter(feeder.jsonResponse.photos.photo, function(flickrPicture) {
               return _.every(tags, function(tag) { return flickrPicture.tags.indexOf(tag) === -1; });
             });
+            console.log(feeder.tagged.length + '/' + feeder.untagged.length);
+            if (feeder.tagged.length < 10) {
+              feeder.jsonResponse = null;
+              var page = Math.floor(1001 * Math.random());
+              httpRequest.open('GET', 'https://api.flickr.com/services/rest/?method=flickr.people.getPublicPhotos&api_key=588ed2f326df81d5a7382e1bf64da098&user_id=12403504%40N02&extras=tags&safe_search=1&per_page=500&page='+page+'&format=json&nojsoncallback=1', true);
+              httpRequest.send(null);
+            }
           }
         }
       };
       var page = Math.floor(1001 * Math.random());
-      httpRequest.open('GET', 'https://api.flickr.com/services/rest/?method=flickr.people.getPublicPhotos&api_key=588ed2f326df81d5a7382e1bf64da098&user_id=12403504%40N02&extras=tags&safe_search=1&per_page=1024&page='+page+'&format=json&nojsoncallback=1', true);
+      httpRequest.open('GET', 'https://api.flickr.com/services/rest/?method=flickr.people.getPublicPhotos&api_key=588ed2f326df81d5a7382e1bf64da098&user_id=12403504%40N02&extras=tags&safe_search=1&per_page=500&page='+page+'&format=json&nojsoncallback=1', true);
       httpRequest.send(null);
     }
 
