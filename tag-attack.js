@@ -707,46 +707,106 @@
 
   var GameOverScene = function(p) {
     EDB.Scene.call(this, p, 800, 600);
-    this.backgroundColor = (new EDB.NESPalette.ColorCreator(4, 3)).p5color(p);
+    this.backgroundColor = (new EDB.NESPalette.ColorCreator(10, 2)).p5color(p);
+    this.scoreboardBackgroundColor = (new EDB.NESPalette.ColorCreator(8, 3)).p5color(p);
 
     this.nextScene = this;
+
+    this.score = {
+      picturesTagged: 16,
+      mistakes: 2,
+      in_a_row: [undefined, undefined, 2, undefined, 1, 1],
+    }
   }
-  GameOverScene.resources = [];
   GameOverScene.prototype = Object.create(EDB.Scene.prototype);
+  GameOverScene.resources = [
+    {'type': 'font', 'name': 'arcadeFont', 'path': 'data/04B_03__.TTF'},
+    {'type': 'sound', 'name': 'gameoverMusic', 'path': 'data/Ozzed_-_Termosdynamik.mp3'},
+  ];
+  GameOverScene.prototype.resourcesList = function() {
+    return GameOverScene.resources;
+  };
   GameOverScene.prototype.start = function() {
+    var gameover = this;
     EDB.Scene.prototype.start.call(this);
+
+    this.gameoverMusic.play();
+    this.time0 = this.p5.millis();
     this.introScene = new IntroScene(this.p5);
     this.introScene.resourceManager = this.resourceManager;
 
     var scoreBoard = new EDB.p5Element();
+    scoreBoard.backgroundColor = (new EDB.NESPalette.ColorCreator(8, 3)).p5color(this.p5);
     scoreBoard.draw = function(p5) {
-      p5.fill(255, 0, 0);
+      this.width = gameover.p5.width * .7;
+      this.height = gameover.p5.height * .8;
+
+      p5.noStroke();
+      p5.fill(this.backgroundColor);
       p5.rectMode(p5.CENTER);
-      p5.rect(this.position.x, this.position.y, 100, 100);
-      p5.fill(0,0,255);
-      p5.ellipse(this.position.x, this.position.y, 25, 25);
+      p5.rect(this.position.x, this.position.y, this.width, this.height);
+
+      var msg = 'Game Over';
+      p5.fill(155);
+      p5.noStroke();
+      p5.textFont(gameover.arcadeFont);
+      p5.textSize(72);
+      p5.text(msg, this.position.x - p5.textWidth(msg) * .5, this.position.y - this.height * .35);
+
+      var leftMargin = this.position.x - this.width * .4;
+      var baseScore = gameover.score.picturesTagged * 9;
+      fullCanvases1 = 'Tagged items: ' + gameover.score.picturesTagged;
+      fullCanvases2 =  gameover.score.picturesTagged + ' x 9 = ' + baseScore;
+      p5.textSize(32);
+      p5.text(fullCanvases1 + "\n" + fullCanvases2, leftMargin, this.position.y - this.height * .25);
+
+      var penalization = gameover.score.mistakes * 3;
+      warnings = 'Warnings: ' + gameover.score.mistakes +'\n' + gameover.score.mistakes + ' x -3 = -' + penalization;
+      p5.text(warnings, leftMargin, this.position.y - this.height * .07);
+
+      var bonus = _.reduce(gameover.score.in_a_row, function(memo, value, index) {
+        return value !== undefined ? memo + value * index: memo;
+      }, 0);
+      var bonusScore = bonus * 7;
+      items = 'Bonus: bonus\n' + bonus + ' x 7 = ' + bonusScore;
+      p5.text(items, leftMargin, this.position.y + this.height * .1);
+
+      score = baseScore + bonusScore - penalization;
+      total = 'Total: \n' + baseScore + ' + ' + bonusScore + ' - ' + penalization + ' = ' + score;
+      p5.textSize(45);
+      p5.text(total, leftMargin, this.position.y + this.height * .35);
     };
 
     this.yuri = new LibrarianSprite(this.p5.width, this.p5.height * .9);
-    this.yuri.setElement(scoreBoard, 100, 100).then(function() {
+    this.yuri.setElement(scoreBoard, this.p5.width * .7, this.p5.height * .8).then(function() {
+      gameover.yuri.setVelocity(-2);
+      gameover.yuri.addElements(gameover);
     });
 
-    this.yuri.addElements(this);
   };
   GameOverScene.prototype.keyPressed = function(k) {
     if (this.p5.key == 'z' || this.p5.key == 'Z') {
-      this.stop();
+      if (this.yuri.yuriSprite.velocity.x === 0 && this.yuri.yuriSprite.position.x <= this.p5.width * .5) {
+        this.stop();
+      }
     }
   };
   GameOverScene.prototype.stop = function() {
+    EDB.Scene.prototype.stop.call(this);
     this.nextScene = this.introScene;
     // music stop
+    this.gameoverMusic.stop();
   };
   GameOverScene.prototype.update = function() {
     EDB.Scene.prototype.update.call(this);
-    this.yuri.setVelocity(-2);
+    if (this.stopped) {
+      return this.nextScene;
+    }
     if (this.yuri.yuriSprite.position.x <= this.p5.width * .5) {
       this.yuri.pause();
+    }
+    if (this.p5.millis() - this.time0 > this.gameoverMusic.duration() * 1000) {
+      this.stop();
     }
     return this.nextScene;
   };
