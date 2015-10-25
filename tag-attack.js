@@ -681,12 +681,41 @@
     EDB.Scene.prototype.start.call(this);
     this.introScene = new IntroScene(this.p5);
     this.introScene.resourceManager = this.resourceManager;
-  }
-  GameOverScene.prototype.keyPressed = function(k) {
-    this.nextScene = this.introScene;
-  }
 
-  var game = EDB.createp5Game([IntroScene, GameScene], 0);
+    var scoreBoard = new EDB.p5Element();
+    scoreBoard.draw = function(p5) {
+      p5.fill(255, 0, 0);
+      p5.rectMode(p5.CENTER);
+      p5.rect(this.position.x, this.position.y, 100, 100);
+      p5.fill(0,0,255);
+      p5.ellipse(this.position.x, this.position.y, 25, 25);
+    };
+
+    this.yuri = new LibrarianSprite(this.p5.width, this.p5.height * .9);
+    this.yuri.setElement(scoreBoard, 100, 100).then(function() {
+    });
+
+    this.yuri.addElements(this);
+  };
+  GameOverScene.prototype.keyPressed = function(k) {
+    if (this.p5.key == 'z' || this.p5.key == 'Z') {
+      this.stop();
+    }
+  };
+  GameOverScene.prototype.stop = function() {
+    this.nextScene = this.introScene;
+    // music stop
+  };
+  GameOverScene.prototype.update = function() {
+    EDB.Scene.prototype.update.call(this);
+    this.yuri.setVelocity(-2);
+    if (this.yuri.yuriSprite.position.x <= this.p5.width * .5) {
+      this.yuri.pause();
+    }
+    return this.nextScene;
+  };
+
+  var game = EDB.createp5Game([IntroScene, GameScene, GameOverScene], 0);
   //var game = EDB.createp5Game([PaletteScene]);
   var myp5 = new p5(game);
 })();
