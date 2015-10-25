@@ -126,7 +126,7 @@ var EDB = (function() {
     this.height = height;
     this.p5 = p;
     this.backgroundColor = 0;
-    this.stopped = false;
+    this.stopped = true;
 
     this.resourceManager = null;
     this.nextScene = null;
@@ -146,9 +146,6 @@ var EDB = (function() {
     this.removeElement = function(k) {
       elements[k] = null;
     }
-  };
-  Scene.prototype.resourcesList = function() {
-    return [];
   };
   Scene.prototype.update = function() {
     _.each(this.getElements(), function(e) {
