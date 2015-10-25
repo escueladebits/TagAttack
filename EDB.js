@@ -112,7 +112,7 @@ var EDB = (function() {
 
   p5Sprite.prototype.update = function() {
     p5Element.prototype.update.call(this);
-    if (this.animationIndex > -1) {
+    if (this.animationIndex > -1 && (this.velocity.x !== 0 || this.velocity.y !== 0)) {
       this.animationIndex++;
       if (this.animationIndex >= this.animation.length) {
         this.animationIndex = 0;
@@ -126,8 +126,10 @@ var EDB = (function() {
     this.height = height;
     this.p5 = p;
     this.backgroundColor = 0;
+    this.stopped = true;
 
     this.resourceManager = null;
+    this.nextScene = null;
 
     var elements = [];
     this.addElement = function(e) {
@@ -145,21 +147,11 @@ var EDB = (function() {
       elements[k] = null;
     }
   };
-  Scene.prototype.resourcesList = function() {
-    return [];
-  };
   Scene.prototype.update = function() {
     _.each(this.getElements(), function(e) {
         if (e !== null) { e.update();}
     });
-    for (r of this.resourcesList()) {
-      if (this[r.name] === undefined && !r.loading) {
-
-        r.loading = true;
-        this[r.name] = this.resourceManager.getValue(r.name);
-      }
-    }
-    return this;
+    return this.nextScene;
   };
   Scene.prototype.draw = function() {
     var p5 = this.p5;
@@ -170,10 +162,19 @@ var EDB = (function() {
       }
     });
   };
-  Scene.prototype.start = function() {};
-  Scene.prototype.stop = function() {};
+  Scene.prototype.start = function() {
+    this.stopped = false;
+    for (r of this.resourcesList()) {
+      this[r.name] = this.resourceManager.getValue(r.name);
+    }
+  };
+  Scene.prototype.stop = function() {
+    this.stopped = true;
+  };
   Scene.prototype.keyPressed = function(k) {};
-  //Scene.prototype.preload = function() {};
+  Scene.prototype.reinit = function() {};
+  Scene.prototype.mousePressed = function() {};
+  Scene.prototype.touchEnded = function() {};
 
   function loadEDBImage(path) {
     var promise = new Promise( function(resolve, reject) {
@@ -335,7 +336,7 @@ var EDB = (function() {
           if (!ready) return;
           var newScene = currentScene.update();
           if (newScene !== currentScene) {
-            currentScene.stop();
+            currentScene.reinit();
             newScene.start();
             currentScene = newScene;
           }
@@ -352,6 +353,11 @@ var EDB = (function() {
         p.mousePressed = function() {
           if (!ready) return;
           currentScene.mousePressed();
+        };
+
+        p.touchEnded = function() {
+          if (!ready) return;
+          currentScene.touchEnded();
         };
       };
     },

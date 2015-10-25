@@ -88,6 +88,17 @@
         return new Promise(function(response, reject) { reject(); });
       }
     };
+    this.setElement = function(element, width, height) {
+      var librarian = this;
+      this.picture = element;
+      this.picture.img = {
+        width: width,
+        height: height,
+      };
+      return promiseAnimation.then(function() {
+        librarian.init();
+      });
+    };
   }
   LibrarianSprite.prototype.setVelocity = function(v) {
     this.yuriSprite.velocity = this.picture.velocity = {
@@ -126,7 +137,6 @@
     EDB.Scene.call(this, p, 800, 600);
     this.textColor = null;
 
-    this.gameScene = new GameScene(p);
     this.nextScene = this;
     this.ready = false;
 
@@ -140,8 +150,11 @@
   ];
   IntroScene.prototype.resourcesList = function() {
     return IntroScene.resources;
-  }
+  };
   IntroScene.prototype.start = function() {
+    EDB.Scene.prototype.start.call(this);
+    this.gameScene = new GameScene(this.p5);
+
     var intro = this;
     this.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(this.p5);
 
@@ -195,13 +208,16 @@
   };
   IntroScene.prototype.update = function() {
     EDB.Scene.prototype.update.call(this);
+    if (this.stopped) {
+      return this.nextScene;
+    }
     if (this.introMusic.isLoaded() && !this.introMusic.isPlaying()) {
       this.introMusic.play();
     }
     if (!this.yuri.loaded && flickrFeeder.available() && !this.yuri.loading) {
       var yuri = this.yuri;
       var intro = this;
-      var path = flickrFeeder.getTagged().path();
+      var path = flickrFeeder.getUntagged().path();
       this.yuri.setPicture(path).then(function() {
         if (!yuri.loaded) {
           yuri.setVelocity(-2);
@@ -217,10 +233,11 @@
     return this.nextScene;
   };
   IntroScene.prototype.stop = function() {
+    EDB.Scene.prototype.stop.call(this);
     this.introMusic.stop();
     this.nextScene = this.gameScene;
     this.nextScene.resourceManager = this.resourceManager;
-  }
+  };
   IntroScene.prototype.keyPressed = function(k) {
     if (this.p5.key == 'z' || this.p5.key == 'Z') {
       this.stop();
@@ -230,6 +247,12 @@
       this.stop();
       return false;
   };
+  IntroScene.prototype.touchEnded = function() {
+    this.mousePressed();
+  }
+  IntroScene.prototype.reinit = function() {
+    this.nextScene = this;
+  };
 
   var GameScene = function(p) {
     EDB.Scene.call(this, p, 800, 600);
@@ -237,6 +260,16 @@
     this.nextScene = this;
 
     this.arrows = [p.UP_ARROW, p.DOWN_ARROW, p.LEFT_ARROW, p.RIGHT_ARROW];
+    this.dismissedInARow = 0;
+    this.untaggedInARow = 0;
+    this.performanceRatio = 1;
+
+    this.row = 0;
+    this.score = {
+      picturesTagged: 0,
+      in_a_row: [],
+      mistakes: 0,
+    };
   };
   GameScene.prototype = Object.create(EDB.Scene.prototype);
   GameScene.resources = [
@@ -244,14 +277,18 @@
     {'type': 'sound', 'name': 'simpleBell', 'path': 'data/Pickup_Coin14.wav'},
     {'type': 'sound', 'name': 'successBell', 'path': 'data/Randomize7.wav'},
     {'type': 'font', 'name': 'arcadeFont', 'path': 'data/04B_03__.TTF'},
+    {'type': 'sound', 'name': 'dismissSound', 'path': 'data/Jump6.wav'},
   ];
   GameScene.prototype.resourcesList = function() {
     return GameScene.resources;
   };
   GameScene.prototype.start = function() {
-    var game = this;
+    EDB.Scene.prototype.start.call(this);
 
-    //game.backgroundColor = game.p5.color(0, 0, 15);
+    this.gameoverScene = new GameOverScene(this.p5);
+    this.gameoverScene.resourceManager = this.resourceManager;
+
+    var game = this;
     game.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(game.p5);
     game.p5.noSmooth();
     game.p5.frameRate(24);
@@ -445,8 +482,32 @@
     game.clock = new Clock(game.music, x + 2, x + 10, game.p5.width - x *2 - 4);
     game.addElement(game.clock);
   };
+  GameScene.prototype.substituteCanvas = function(direction) {
+    var game = this;
+    if (selectedTags.length + usedTags.length === tags.length) {
+      usedTags = [];
+    }
+
+    var oldTag = _.find(selectedTags, function(tc) {
+      return tc.tag == game.tagCanvases[direction].tag;
+    });
+    usedTags.push(oldTag);
+    var oldIndex = selectedTags.indexOf(oldTag);
+    selectedTags.splice(oldIndex, 1);
+    var newTag = _.sample(_.filter(tags, function(tc) {
+      return selectedTags.indexOf(tc) === -1 && usedTags.indexOf(tc) === -1;
+    }));
+    selectedTags.push(newTag);
+
+    this.successBell.play();
+
+    this.changeTagCanvas(direction, newTag);
+  };
   GameScene.prototype.update = function() {
     EDB.Scene.prototype.update.call(this);
+    if (this.stopped) {
+      return this.nextScene;
+    }
     var game = this;
     if (game.music.isLoaded() && !game.music.isPlaying()) {
       game.music.play();
@@ -454,7 +515,7 @@
     }
     if (!this.librarian.loaded && flickrFeeder.available()) {
       var librarian = this.librarian;
-      var path = flickrFeeder.getTagged().path();
+      var path = this.getNextImage();
       this.librarian.setPicture(path).then(function() {
         if (!librarian.loaded) {
           librarian.addElements(game);
@@ -462,45 +523,121 @@
       });
     }
     if (this.librarian.tooLeft(this.p5)) {
-      this.librarian.setPicture(flickrFeeder.getUntagged().path());
+      this.dismiss();
     }
     this.secs = (this.p5.millis() - this.time0) / 1000;
-    if (this.secs >= this.music.duration()) {
+    if (this.secs >= this.music.duration() * .99) {
       this.stop();
     }
     _.each(this.arrows, function(arrow) {
       if (game.tagCanvases[arrow].full()) {
-        if (selectedTags.length + usedTags.length === tags.length) {
-          usedTags = [];
-        }
-
-        var oldTag = _.find(selectedTags, function(tc) {
-          return tc.tag == game.tagCanvases[arrow].tag;
-        });
-        usedTags.push(oldTag);
-        var oldIndex = selectedTags.indexOf(oldTag);
-        selectedTags.splice(oldIndex, 1);
-        var newTag = _.sample(_.filter(tags, function(tc) {
-          return selectedTags.indexOf(tc) === -1 && usedTags.indexOf(tc) === -1;
-        }));
-        selectedTags.push(newTag);
-
-        game.successBell.play();
-
-        game.changeTagCanvas(arrow, newTag);
+        game.substituteCanvas(arrow);
       }
     });
     return this.nextScene;
   };
+  GameScene.prototype.getNextImage = function() {
+    var source = null;
+    if (this.untaggedInARow++ < this.performanceRatio) {
+      this.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(this.p5);
+      source = flickrFeeder.getUntagged();
+    }
+    else {
+      this.untaggedInARow = 0;
+      if (flickrFeeder.taggedAvailable()) {
+        this.backgroundColor = (new EDB.NESPalette.ColorCreator(4, 3)).p5color(this.p5);
+        source = flickrFeeder.getTagged();
+      }
+      else {
+        this.backgroundColor = (new EDB.NESPalette.ColorCreator(13, 3)).p5color(this.p5);
+        source = flickrFeeder.getUntagged();
+      }
+    }
+    this.currentFlickrPicture = source;
+    return source.path();
+  };
+  GameScene.prototype.positiveTagging = function() {
+    this.performanceRatio++;
+  };
+  GameScene.prototype.negativeTagging = function() {
+    this.performanceRatio = this.performanceRatio === 1 ? 1 : Math.floor(this.performanceRatio / 2);
+    // play sound
+    this.score.mistakes++;
+  };
+  GameScene.prototype.closeRow = function() {
+    if (this.row > 1) {
+      if (this.score.in_a_row[this.row] === undefined) {
+        this.score.in_a_row[this.row] = 0;
+      }
+      this.score.in_a_row[this.row]++;
+    }
+    this.row = 0;
+  };
   GameScene.prototype.dismiss = function() {
-    this.librarian.setPicture(flickrFeeder.getTagged().path());
+    this.closeRow();
+    if (this.untaggedInARow === 0) {
+      if (_.intersection(_.map(selectedTags, 'tag'), this.currentFlickrPicture.tags).length === 0) {
+        this.positiveTagging();
+      }
+      else {
+        this.negativeTagging();
+      }
+    }
+    this.librarian.setPicture(this.getNextImage());
+    this.usedImages++;
+    this.dismissedInARow++;
+    this.dismissSound.play();
+    if (this.dismissedInARow >= 5) {
+      this.dismissedInARow = 0;
+      var removables = [];
+      var minLength = _.reduce(this.tagCanvases, function(memo, tc) {
+        if (tc !== undefined) {
+          return Math.min(memo, tc.pictures.length);
+        }
+        else {
+          return memo;
+        }
+      }, 100);
+      for (d of this.arrows) {
+        if (this.tagCanvases[d].pictures.length === minLength) {
+          removables.push(d);
+        }
+      }
+      var direction = _.sample(removables);
+      this.substituteCanvas(direction);
+    }
   };
   GameScene.prototype.assignTag = function(direction) {
+    if (this.untaggedInARow === 0) {
+      var chosenTag = this.tagCanvases[direction].tag;
+      if (this.currentFlickrPicture.tags.indexOf(chosenTag) !== -1) {
+        this.positiveTagging();
+      }
+      else {
+        this.negativeTagging();
+      }
+    }
     this.simpleBell.play();
     var picture = this.librarian.getPicture();
-    this.librarian.setPicture(flickrFeeder.getTagged().path());
+    this.librarian.setPicture(this.getNextImage());
     this.tagCanvases[direction].highlight();
     this.tagCanvases[direction].addPicture(picture);
+    this.dismissedInARow = 0;
+
+    this.score.picturesTagged++;
+    this.row++;
+  };
+  GameScene.prototype.totalScore = function(score) {
+    var base = score.picturesTagged * 9 - score.mistakes * 5;
+    base += _.reduce(score.in_a_row, function(memo, value, index) {
+      if (value !== undefined) {
+        return memo + 3 * value * index;
+      }
+      else {
+        return memo;
+      }
+    }, 0);
+    return base;
   };
   GameScene.prototype.keyPressed = function(k) {
     if (this.librarian && this.librarian.loading) {
@@ -513,29 +650,44 @@
       this.assignTag(this.p5.keyCode);
     }
   };
-  GameScene.prototype.mousePressed = function() {
+  GameScene.prototype.positionControl = function(x, y) {
     if (this.librarian && this.librarian.loading) {
       return;
     }
     for(direction of this.arrows) {
-      if (this.tagCanvases[direction].belongs(this.p5.mouseX, this.p5.mouseY)) {
+      if (this.tagCanvases[direction].belongs(x, y)) {
         this.assignTag(direction);
         return;
       }
     }
     this.dismiss();
   };
+  GameScene.prototype.mousePressed = function() {
+    this.positionControl(mouseX, mouseY);
+  };
+  GameScene.prototype.touchEnded = function() {
+    if (this.p5.touches.length === 1) {
+      this.positionControl(touchX, touchY);
+    }
+  };
   GameScene.prototype.stop = function() {
     EDB.Scene.prototype.stop.call(this);
     this.music.stop();
-    this.nextScene = null;
+    this.nextScene = this.gameoverScene;
+    this.gameoverScene.score = this.score;
+  };
+  GameScene.prototype.reinit = function() {
+    this.nextScene = this;
   };
 
   function PaletteScene(p) {
     EDB.Scene.call(this, p, 320, 200);
+    this.nextScene = this;
   }
+  PaletteScene.resources = [];
   PaletteScene.prototype = Object.create(EDB.Scene.prototype);
   PaletteScene.prototype.start = function() {
+    EDB.Scene.prototype.start.call(this);
     var scene = this;
     function Panel(x, y, index, luminance) {
       EDB.p5Element.call(this);
@@ -564,7 +716,124 @@
     }
   };
 
-  var game = EDB.createp5Game([IntroScene, GameScene], 0);
+  var GameOverScene = function(p) {
+    EDB.Scene.call(this, p, 800, 600);
+    this.backgroundColor = (new EDB.NESPalette.ColorCreator(10, 2)).p5color(p);
+    this.scoreboardBackgroundColor = (new EDB.NESPalette.ColorCreator(8, 3)).p5color(p);
+
+    this.nextScene = this;
+
+    this.score = {
+      picturesTagged: 16,
+      mistakes: 2,
+      in_a_row: [undefined, undefined, 2, undefined, 1, 1],
+    }
+  }
+  GameOverScene.prototype = Object.create(EDB.Scene.prototype);
+  GameOverScene.resources = [
+    {'type': 'font', 'name': 'arcadeFont', 'path': 'data/04B_03__.TTF'},
+    {'type': 'sound', 'name': 'gameoverMusic', 'path': 'data/Ozzed_-_Termosdynamik.mp3'},
+  ];
+  GameOverScene.prototype.resourcesList = function() {
+    return GameOverScene.resources;
+  };
+  GameOverScene.prototype.start = function() {
+    var gameover = this;
+    EDB.Scene.prototype.start.call(this);
+
+    this.gameoverMusic.play();
+    this.time0 = this.p5.millis();
+    this.introScene = new IntroScene(this.p5);
+    this.introScene.resourceManager = this.resourceManager;
+
+    var scoreBoard = new EDB.p5Element();
+    scoreBoard.backgroundColor = (new EDB.NESPalette.ColorCreator(8, 3)).p5color(this.p5);
+    scoreBoard.draw = function(p5) {
+      this.width = gameover.p5.width * .7;
+      this.height = gameover.p5.height * .8;
+
+      p5.noStroke();
+      p5.fill(this.backgroundColor);
+      p5.rectMode(p5.CENTER);
+      p5.rect(this.position.x, this.position.y, this.width, this.height);
+
+      var msg = 'Game Over';
+      p5.fill(155);
+      p5.noStroke();
+      p5.textFont(gameover.arcadeFont);
+      p5.textSize(72);
+      p5.text(msg, this.position.x - p5.textWidth(msg) * .5, this.position.y - this.height * .35);
+
+      var leftMargin = this.position.x - this.width * .4;
+      var baseScore = gameover.score.picturesTagged * 9;
+      fullCanvases1 = 'Tagged items: ' + gameover.score.picturesTagged;
+      fullCanvases2 =  gameover.score.picturesTagged + ' x 9 = ' + baseScore;
+      p5.textSize(32);
+      p5.text(fullCanvases1 + "\n" + fullCanvases2, leftMargin, this.position.y - this.height * .25);
+
+      var penalization = gameover.score.mistakes * 3;
+      warnings = 'Warnings: ' + gameover.score.mistakes +'\n' + gameover.score.mistakes + ' x -3 = -' + penalization;
+      p5.text(warnings, leftMargin, this.position.y - this.height * .07);
+
+      var bonus = _.reduce(gameover.score.in_a_row, function(memo, value, index) {
+        return value !== undefined ? memo + value * index: memo;
+      }, 0);
+      var bonusScore = bonus * 7;
+      items = 'Bonus: bonus\n' + bonus + ' x 7 = ' + bonusScore;
+      p5.text(items, leftMargin, this.position.y + this.height * .1);
+
+      score = baseScore + bonusScore - penalization;
+      total = 'Total: \n' + baseScore + ' + ' + bonusScore + ' - ' + penalization + ' = ' + score;
+      p5.textSize(45);
+      p5.text(total, leftMargin, this.position.y + this.height * .35);
+    };
+
+    this.yuri = new LibrarianSprite(this.p5.width, this.p5.height * .9);
+    this.yuri.setElement(scoreBoard, this.p5.width * .7, this.p5.height * .8).then(function() {
+      gameover.yuri.setVelocity(-2);
+      gameover.yuri.addElements(gameover);
+    });
+
+  };
+  GameOverScene.prototyope.actionEnding = function() {
+    if (this.yuri.yuriSprite.velocity.x === 0 && this.yuri.yuriSprite.position.x <= this.p5.width * .5) {
+      this.stop();
+    }
+  };
+  GameOverScene.prototype.keyPressed = function(k) {
+    if (this.p5.key == 'z' || this.p5.key == 'Z') {
+      this.actionEnding();
+    }
+  };
+  GameOverScene.prototype.mousePressed = function() {
+    this.actionEnding();
+  };
+  GameOverScene.prototype.touchEnded = function() {
+    if (this.p5.touches.length === 1) {
+      this.actionEnding();
+    }
+  };
+  GameOverScene.prototype.stop = function() {
+    EDB.Scene.prototype.stop.call(this);
+    this.nextScene = this.introScene;
+    // music stop
+    this.gameoverMusic.stop();
+  };
+  GameOverScene.prototype.update = function() {
+    EDB.Scene.prototype.update.call(this);
+    if (this.stopped) {
+      return this.nextScene;
+    }
+    if (this.yuri.yuriSprite.position.x <= this.p5.width * .5) {
+      this.yuri.pause();
+    }
+    if (this.p5.millis() - this.time0 > this.gameoverMusic.duration() * 1000) {
+      this.stop();
+    }
+    return this.nextScene;
+  };
+
+  var game = EDB.createp5Game([IntroScene, GameScene, GameOverScene], 0);
   //var game = EDB.createp5Game([PaletteScene]);
   var myp5 = new p5(game);
 })();
