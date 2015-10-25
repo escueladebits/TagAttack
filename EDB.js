@@ -175,11 +175,9 @@ var EDB = (function() {
     this.stopped = true;
   };
   Scene.prototype.keyPressed = function(k) {};
-  //Scene.prototype.preload = function() {};
-  Scene.prototype.reinit = function() {
+  Scene.prototype.reinit = function() {};
+  Scene.prototype.mousePressed = function() {};
 
-  };
-  
   function loadEDBImage(path) {
     var promise = new Promise( function(resolve, reject) {
       var img = new Image();
