@@ -663,11 +663,12 @@
     this.dismiss();
   };
   GameScene.prototype.mousePressed = function() {
-    this.positionControl(mouseX, mouseY);
+    this.positionControl(this.p5.mouseX, this.p5.mouseY);
   };
   GameScene.prototype.touchEnded = function() {
     if (this.p5.touches.length === 1) {
-      this.positionControl(touchX, touchY);
+      this.positionControl(this.p5.touchX, this.p5.touchY);
+
     }
   };
   GameScene.prototype.stop = function() {
@@ -795,7 +796,6 @@
     });
 
   };
-
   GameOverScene.prototype.actionEnding = function() {
     if (this.yuri.yuriSprite.velocity.x === 0 && this.yuri.yuriSprite.position.x <= this.p5.width * .5) {
       this.stop();
