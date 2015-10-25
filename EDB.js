@@ -112,7 +112,7 @@ var EDB = (function() {
 
   p5Sprite.prototype.update = function() {
     p5Element.prototype.update.call(this);
-    if (this.animationIndex > -1) {
+    if (this.animationIndex > -1 && (this.velocity.x !== 0 || this.velocity.y !== 0)) {
       this.animationIndex++;
       if (this.animationIndex >= this.animation.length) {
         this.animationIndex = 0;
