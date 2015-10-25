@@ -670,11 +670,12 @@
   };
 
   var GameOverScene = function(p) {
-    EDB.Scene.call(this, p);
+    EDB.Scene.call(this, p, 800, 600);
     this.backgroundColor = (new EDB.NESPalette.ColorCreator(4, 3)).p5color(p);
 
     this.nextScene = this;
   }
+  GameOverScene.resources = [];
   GameOverScene.prototype = Object.create(EDB.Scene.prototype);
   GameOverScene.prototype.start = function() {
     EDB.Scene.prototype.start.call(this);
