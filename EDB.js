@@ -129,6 +129,7 @@ var EDB = (function() {
     this.stopped = false;
 
     this.resourceManager = null;
+    this.nextScene = null;
 
     var elements = [];
     this.addElement = function(e) {
@@ -153,7 +154,7 @@ var EDB = (function() {
     _.each(this.getElements(), function(e) {
         if (e !== null) { e.update();}
     });
-    return this;
+    return this.nextScene;
   };
   Scene.prototype.draw = function() {
     var p5 = this.p5;
@@ -175,7 +176,10 @@ var EDB = (function() {
   };
   Scene.prototype.keyPressed = function(k) {};
   //Scene.prototype.preload = function() {};
+  Scene.prototype.reinit = function() {
 
+  };
+  
   function loadEDBImage(path) {
     var promise = new Promise( function(resolve, reject) {
       var img = new Image();

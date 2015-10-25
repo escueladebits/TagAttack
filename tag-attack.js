@@ -264,12 +264,10 @@
   GameScene.prototype.start = function() {
     EDB.Scene.prototype.start.call(this);
 
-    this.introScene = new IntroScene(this.p5);
-    this.introScene.resourceManager = this.resourceManager;
+    this.gameoverScene = new GameOverScene(this.p5);
+    this.gameoverScene.resourceManager = this.resourceManager;
 
     var game = this;
-
-    //game.backgroundColor = game.p5.color(0, 0, 15);
     game.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(game.p5);
     game.p5.noSmooth();
     game.p5.frameRate(24);
@@ -620,7 +618,7 @@
   GameScene.prototype.stop = function() {
     EDB.Scene.prototype.stop.call(this);
     this.music.stop();
-    this.nextScene = this.introScene;
+    this.nextScene = this.gameoverScene;
   };
   GameScene.prototype.reinit = function() {
     this.nextScene = this;
@@ -659,6 +657,22 @@
       }
     }
   };
+
+  var GameOverScene = function(p) {
+    EDB.Scene.call(this, p);
+    this.backgroundColor = (new EDB.NESPalette.ColorCreator(4, 3)).p5color(p);
+
+    this.nextScene = this;
+  }
+  GameOverScene.prototype = Object.create(EDB.Scene.prototype);
+  GameOverScene.prototype.start = function() {
+    EDB.Scene.prototype.start.call(this);
+    this.introScene = new IntroScene(this.p5);
+    this.introScene.resourceManager = this.resourceManager;
+  }
+  GameOverScene.prototype.keyPressed = function(k) {
+    this.nextScene = this.introScene;
+  }
 
   var game = EDB.createp5Game([IntroScene, GameScene], 0);
   //var game = EDB.createp5Game([PaletteScene]);
