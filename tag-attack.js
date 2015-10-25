@@ -505,7 +505,7 @@
       this.librarian.setPicture(this.getNextImage());
     }
     this.secs = (this.p5.millis() - this.time0) / 1000;
-    if (this.secs >= this.music.duration()) {
+    if (this.secs >= this.music.duration() * .99) {
       this.stop();
     }
     _.each(this.arrows, function(arrow) {
