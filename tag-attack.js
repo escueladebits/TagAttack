@@ -637,7 +637,9 @@
 
   function PaletteScene(p) {
     EDB.Scene.call(this, p, 320, 200);
+    this.nextScene = this;
   }
+  PaletteScene.resources = [];
   PaletteScene.prototype = Object.create(EDB.Scene.prototype);
   PaletteScene.prototype.start = function() {
     EDB.Scene.prototype.start.call(this);
