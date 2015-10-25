@@ -247,6 +247,9 @@
       this.stop();
       return false;
   };
+  IntroScene.prototype.touchEnded = function() {
+    this.mousePressed();
+  }
   IntroScene.prototype.reinit = function() {
     this.nextScene = this;
   };
@@ -647,17 +650,25 @@
       this.assignTag(this.p5.keyCode);
     }
   };
-  GameScene.prototype.mousePressed = function() {
+  GameScene.prototype.positionControl = function(x, y) {
     if (this.librarian && this.librarian.loading) {
       return;
     }
     for(direction of this.arrows) {
-      if (this.tagCanvases[direction].belongs(this.p5.mouseX, this.p5.mouseY)) {
+      if (this.tagCanvases[direction].belongs(x, y)) {
         this.assignTag(direction);
         return;
       }
     }
     this.dismiss();
+  };
+  GameScene.prototype.mousePressed = function() {
+    this.positionControl(mouseX, mouseY);
+  };
+  GameScene.prototype.touchEnded = function() {
+    if (this.p5.touches.length === 1) {
+      this.positionControl(touchX, touchY);
+    }
   };
   GameScene.prototype.stop = function() {
     EDB.Scene.prototype.stop.call(this);
@@ -784,11 +795,22 @@
     });
 
   };
+  GameOverScene.prototype.actionEnding = function() {
+    if (this.yuri.yuriSprite.velocity.x === 0 && this.yuri.yuriSprite.position.x <= this.p5.width * .5) {
+      this.stop();
+    }
+  };
   GameOverScene.prototype.keyPressed = function(k) {
     if (this.p5.key == 'z' || this.p5.key == 'Z') {
-      if (this.yuri.yuriSprite.velocity.x === 0 && this.yuri.yuriSprite.position.x <= this.p5.width * .5) {
-        this.stop();
-      }
+      this.actionEnding();
+    }
+  };
+  GameOverScene.prototype.mousePressed = function() {
+    this.actionEnding();
+  };
+  GameOverScene.prototype.touchEnded = function() {
+    if (this.p5.touches.length === 1) {
+      this.actionEnding();
     }
   };
   GameOverScene.prototype.stop = function() {
