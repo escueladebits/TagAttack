@@ -795,7 +795,8 @@
     });
 
   };
-  GameOverScene.prototyope.actionEnding = function() {
+
+  GameOverScene.prototype.actionEnding = function() {
     if (this.yuri.yuriSprite.velocity.x === 0 && this.yuri.yuriSprite.position.x <= this.p5.width * .5) {
       this.stop();
     }
