@@ -174,6 +174,7 @@ var EDB = (function() {
   Scene.prototype.keyPressed = function(k) {};
   Scene.prototype.reinit = function() {};
   Scene.prototype.mousePressed = function() {};
+  Scene.prototype.touchEnded = function() {};
 
   function loadEDBImage(path) {
     var promise = new Promise( function(resolve, reject) {
@@ -352,6 +353,11 @@ var EDB = (function() {
         p.mousePressed = function() {
           if (!ready) return;
           currentScene.mousePressed();
+        };
+
+        p.touchEnded = function() {
+          if (!ready) return;
+          currentScene.touchEnded();
         };
       };
     },
