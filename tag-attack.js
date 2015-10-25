@@ -150,7 +150,7 @@
   ];
   IntroScene.prototype.resourcesList = function() {
     return IntroScene.resources;
-  }
+  };
   IntroScene.prototype.start = function() {
     EDB.Scene.prototype.start.call(this);
     this.gameScene = new GameScene(this.p5);
@@ -260,6 +260,13 @@
     this.dismissedInARow = 0;
     this.untaggedInARow = 0;
     this.performanceRatio = 1;
+
+    this.row = 0;
+    this.score = {
+      picturesTagged: 0,
+      in_a_row: [],
+      mistakes: 0,
+    };
   };
   GameScene.prototype = Object.create(EDB.Scene.prototype);
   GameScene.resources = [
@@ -513,7 +520,7 @@
       });
     }
     if (this.librarian.tooLeft(this.p5)) {
-      this.librarian.setPicture(this.getNextImage());
+      this.dismiss();
     }
     this.secs = (this.p5.millis() - this.time0) / 1000;
     if (this.secs >= this.music.duration() * .99) {
@@ -552,8 +559,19 @@
   GameScene.prototype.negativeTagging = function() {
     this.performanceRatio = this.performanceRatio === 1 ? 1 : Math.floor(this.performanceRatio / 2);
     // play sound
-  }
+    this.score.mistakes++;
+  };
+  GameScene.prototype.closeRow = function() {
+    if (this.row > 1) {
+      if (this.score.in_a_row[this.row] === undefined) {
+        this.score.in_a_row[this.row] = 0;
+      }
+      this.score.in_a_row[this.row]++;
+    }
+    this.row = 0;
+  };
   GameScene.prototype.dismiss = function() {
+    this.closeRow();
     if (this.untaggedInARow === 0) {
       if (_.intersection(_.map(selectedTags, 'tag'), this.currentFlickrPicture.tags).length === 0) {
         this.positiveTagging();
@@ -602,6 +620,21 @@
     this.tagCanvases[direction].highlight();
     this.tagCanvases[direction].addPicture(picture);
     this.dismissedInARow = 0;
+
+    this.score.picturesTagged++;
+    this.row++;
+  };
+  GameScene.prototype.totalScore = function(score) {
+    var base = score.picturesTagged * 9 - score.mistakes * 5;
+    base += _.reduce(score.in_a_row, function(memo, value, index) {
+      if (value !== undefined) {
+        return memo + 3 * value * index;
+      }
+      else {
+        return memo;
+      }
+    }, 0);
+    return base;
   };
   GameScene.prototype.keyPressed = function(k) {
     if (this.librarian && this.librarian.loading) {
@@ -630,6 +663,7 @@
     EDB.Scene.prototype.stop.call(this);
     this.music.stop();
     this.nextScene = this.gameoverScene;
+    this.gameoverScene.score = this.score;
   };
   GameScene.prototype.reinit = function() {
     this.nextScene = this;
