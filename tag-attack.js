@@ -88,6 +88,17 @@
         return new Promise(function(response, reject) { reject(); });
       }
     };
+    this.setElement = function(element, width, height) {
+      var librarian = this;
+      this.picture = element;
+      this.picture.img = {
+        width: width,
+        height: height,
+      };
+      return promiseAnimation.then(function() {
+        librarian.init();
+      });
+    };
   }
   LibrarianSprite.prototype.setVelocity = function(v) {
     this.yuriSprite.velocity = this.picture.velocity = {
