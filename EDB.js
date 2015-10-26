@@ -346,6 +346,10 @@ var EDB = (function() {
         };
 
         p.keyPressed = function() {
+          if (p.key === '1') {
+            window.location.href='..';
+            return false;
+          }
           if (!ready) return;
           currentScene.keyPressed(p);
         };
