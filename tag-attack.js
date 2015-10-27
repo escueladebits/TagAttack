@@ -270,6 +270,9 @@
       in_a_row: [],
       mistakes: 0,
     };
+
+    this.uuid = EDB.uuid();
+    console.log(this.uuid);
   };
   GameScene.prototype = Object.create(EDB.Scene.prototype);
   GameScene.resources = [
@@ -554,6 +557,7 @@
       }
     }
     this.currentFlickrPicture = source;
+    this.currentFlickrPicture.timestamp = this.p5.millis();
     return source.path();
   };
   GameScene.prototype.positiveTagging = function() {
@@ -574,6 +578,7 @@
     this.row = 0;
   };
   GameScene.prototype.dismiss = function() {
+    this.log('dismissed');
     this.closeRow();
     if (this.untaggedInARow === 0) {
       if (_.intersection(_.map(selectedTags, 'tag'), this.currentFlickrPicture.tags).length === 0) {
@@ -608,8 +613,9 @@
     }
   };
   GameScene.prototype.assignTag = function(direction) {
+    var chosenTag = this.tagCanvases[direction].tag;
+    this.log(chosenTag);
     if (this.untaggedInARow === 0) {
-      var chosenTag = this.tagCanvases[direction].tag;
       if (this.currentFlickrPicture.tags.indexOf(chosenTag) !== -1) {
         this.positiveTagging();
       }
@@ -678,6 +684,21 @@
   };
   GameScene.prototype.reinit = function() {
     this.nextScene = this;
+  };
+  GameScene.prototype.log = function(tag) {
+    var log = {
+      game_id: this.uuid,
+      timestamp: this.currentFlickrPicture.timestamp,
+      action_timestamp: this.p5.millis(),
+      flickrid: this.currentFlickrPicture.id,
+      assigned_tag: tag,
+      speed: 0,
+      level: 0,
+      row: this.row,
+      tags: this.currentFlickrPicture.tags,
+    };
+    console.log(log);
+    _LTracker.push(log);
   };
 
   function PaletteScene(p) {
