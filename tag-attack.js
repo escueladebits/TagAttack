@@ -153,6 +153,8 @@
   IntroScene.prototype.start = function() {
     EDB.Scene.prototype.start.call(this);
     this.gameScene = new GameScene(this.p5);
+    this.levelsScene = new SelectLevelScene(this.p5);
+    this.levelsScene.gameScene = this.gameScene;
 
     var intro = this;
     this.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(this.p5);
@@ -234,9 +236,9 @@
   IntroScene.prototype.stop = function() {
     EDB.Scene.prototype.stop.call(this);
     this.introMusic.stop();
-    this.nextScene = this.gameScene;
+    this.nextScene = this.levelsScene;
     this.nextScene.resourceManager = this.resourceManager;
-    this.nextScene.flickrFeeder = this.flickrFeeder;
+    this.gameScene.flickrFeeder = this.flickrFeeder;
   };
   IntroScene.prototype.keyPressed = function(k) {
     if (this.p5.key == 'z' || this.p5.key == 'Z') {
@@ -253,6 +255,110 @@
   IntroScene.prototype.reinit = function() {
     this.nextScene = this;
   };
+
+  var SelectLevelScene = function(p) {
+    EDB.Scene.call(this, p, 800, 600)
+    this.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(p);
+    this.textColor = (new EDB.NESPalette.ColorCreator(0, 0)).p5color(p);
+    this.selectedColor = (new EDB.NESPalette.ColorCreator(4, 1)).p5color(p);
+
+    this.nextScene = this;
+    this.levels = [
+      {
+        name: 'Level 1',
+        speed: 4,
+        tags: ['portrait', 'people', 'architecture', 'map',],
+        taglines: [
+          'First steps',
+          'Use only common tags',
+          'Low speed',
+          'Learn the basics',
+        ],
+      },
+      {
+        name: 'Level 2',
+        speed: 6,
+        tags: ['portrait', 'people', 'architecture', 'map', 'flora', 'fauna',],
+        taglines: [
+          'Become a professional',
+          'Use common and uncommon tags',
+          'Medium speed',
+          'Tag as many as you can',
+        ],
+      },
+      {
+        name: 'Level 3',
+        speed: 9,
+        tags: ['portrait', 'people', 'architecture', 'map', 'flora', 'fauna', 'heraldry', 'music', 'cycling'],
+        taglines: [
+          'High speed',
+          'Domain rare & arcane tags',
+          'Become a master librarian',
+        ],
+      },
+    ];
+    this.selectedLevel = -1;
+  }
+  SelectLevelScene.resources = [
+    {'type': 'font', 'name': 'arcadeFont', 'path': 'data/04B_03__.TTF'},
+    {'type': 'sound', 'name': 'dismissSound', 'path': 'data/Jump6.wav'},
+    {'type': 'sound', 'name': 'simpleBell', 'path': 'data/Pickup_Coin14.wav'},
+  ];
+  SelectLevelScene.prototype = Object.create(EDB.Scene.prototype);
+  SelectLevelScene.prototype.resourcesList = function() {
+    return SelectLevelScene.resources;
+  };
+  SelectLevelScene.prototype.stop = function() {
+    this.nextScene = this.gameScene;
+    this.nextScene.resourceManager = this.resourceManager;
+    this.nextScene.level = this.levels[this.selectedLevel];
+  };
+  SelectLevelScene.prototype.draw = function() {
+    if (this.arcadeFont !== undefined) {
+      EDB.Scene.prototype.draw.call(this);
+      this.p5.textFont(this.arcadeFont);
+      this.p5.textSize(48);
+      for (var i = 0; i < this.levels.length; i++) {
+        var third = this.p5.width * .33;
+        var x = (i+1) * third - this.p5.textWidth(this.levels[i].name) * 1.3;
+        this.p5.fill(this.textColor);
+        if (i === this.selectedLevel) {
+          this.p5.fill(this.selectedColor);
+        }
+        this.p5.text(this.levels[i].name, x, this.p5.height *.3);
+      }
+
+      if (this.selectedLevel !== -1) {
+        this.p5.fill(this.textColor);
+        this.p5.textSize(32);
+        var levelFeatures = _.map(this.levels[this.selectedLevel].taglines, function(l) { return '- ' + l;}).join('\n\n');
+        this.p5.text(levelFeatures, this.p5.width * .20, this.p5.height * .5);
+      }
+    }
+  };
+  SelectLevelScene.prototype.keyPressed = function() {
+    if (this.p5.keyCode == this.p5.LEFT_ARROW) {
+      this.selectedLevel--;
+      this.dismissSound.play();
+    }
+    else if (this.p5.keyCode === this.p5.RIGHT_ARROW) {
+      this.selectedLevel++;
+      this.dismissSound.play();
+    }
+    if (this.selectedLevel < 0) {
+      this.selectedLevel = this.levels.length - 1;
+    }
+    else if (this.selectedLevel === this.levels.length) {
+      this.selectedLevel = 0;
+    }
+    if (this.p5.key === 'z' || this.p5.key === 'Z') {
+      if (this.selectedLevel !== -1) {
+        this.simpleBell.play();
+        this.stop();
+      }
+    }
+    return false;
+  }
 
   var GameScene = function(p) {
     EDB.Scene.call(this, p, 800, 600);
@@ -854,7 +960,7 @@
     return this.nextScene;
   };
 
-  var game = EDB.createp5Game([IntroScene, GameScene, GameOverScene], 0);
+  var game = EDB.createp5Game([IntroScene, SelectLevelScene, GameScene, GameOverScene], 0);
   //var game = EDB.createp5Game([PaletteScene]);
   var myp5 = new p5(game);
 })();
