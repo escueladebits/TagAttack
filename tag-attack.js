@@ -29,8 +29,6 @@
     {tag: 'cycling', index: 12, lum: 2,},
   ];
 
-  var flickrFeeder = new FlickrFeeder(tags);
-
   var selectedTags = _.sortBy(tags, function() { return Math.random();}).slice(0,4);
   selectedTags = _.sortBy(selectedTags, function(t) { return 1 / t.tag.length;});
   var usedTags = [];
@@ -141,6 +139,7 @@
     this.ready = false;
 
     this.walkingLeft = true;
+    this.flickrFeeder = new FlickrFeeder(tags);
   };
   IntroScene.prototype = Object.create(EDB.Scene.prototype);
 
@@ -214,10 +213,10 @@
     if (this.introMusic.isLoaded() && !this.introMusic.isPlaying()) {
       this.introMusic.play();
     }
-    if (!this.yuri.loaded && flickrFeeder.available() && !this.yuri.loading) {
+    if (!this.yuri.loaded && this.flickrFeeder.available() && !this.yuri.loading) {
       var yuri = this.yuri;
       var intro = this;
-      var path = flickrFeeder.getUntagged().path();
+      var path = this.flickrFeeder.getUntagged().path();
       this.yuri.setPicture(path).then(function() {
         if (!yuri.loaded) {
           yuri.setVelocity(-2);
@@ -237,6 +236,7 @@
     this.introMusic.stop();
     this.nextScene = this.gameScene;
     this.nextScene.resourceManager = this.resourceManager;
+    this.nextScene.flickrFeeder = this.flickrFeeder;
   };
   IntroScene.prototype.keyPressed = function(k) {
     if (this.p5.key == 'z' || this.p5.key == 'Z') {
@@ -270,6 +270,9 @@
       in_a_row: [],
       mistakes: 0,
     };
+
+    this.uuid = EDB.uuid();
+    console.log(this.uuid);
   };
   GameScene.prototype = Object.create(EDB.Scene.prototype);
   GameScene.resources = [
@@ -513,7 +516,7 @@
       game.music.play();
       game.time0 = game.p5.millis();
     }
-    if (!this.librarian.loaded && flickrFeeder.available()) {
+    if (!this.librarian.loaded && this.flickrFeeder.available()) {
       var librarian = this.librarian;
       var path = this.getNextImage();
       this.librarian.setPicture(path).then(function() {
@@ -540,20 +543,21 @@
     var source = null;
     if (this.untaggedInARow++ < this.performanceRatio) {
       this.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(this.p5);
-      source = flickrFeeder.getUntagged();
+      source = this.flickrFeeder.getUntagged();
     }
     else {
       this.untaggedInARow = 0;
-      if (flickrFeeder.taggedAvailable()) {
+      if (this.flickrFeeder.taggedAvailable()) {
         this.backgroundColor = (new EDB.NESPalette.ColorCreator(4, 3)).p5color(this.p5);
-        source = flickrFeeder.getTagged();
+        source = this.flickrFeeder.getTagged();
       }
       else {
         this.backgroundColor = (new EDB.NESPalette.ColorCreator(13, 3)).p5color(this.p5);
-        source = flickrFeeder.getUntagged();
+        source = this.flickrFeeder.getUntagged();
       }
     }
     this.currentFlickrPicture = source;
+    this.currentFlickrPicture.timestamp = this.p5.millis();
     return source.path();
   };
   GameScene.prototype.positiveTagging = function() {
@@ -574,6 +578,7 @@
     this.row = 0;
   };
   GameScene.prototype.dismiss = function() {
+    this.log('dismissed');
     this.closeRow();
     if (this.untaggedInARow === 0) {
       if (_.intersection(_.map(selectedTags, 'tag'), this.currentFlickrPicture.tags).length === 0) {
@@ -608,8 +613,9 @@
     }
   };
   GameScene.prototype.assignTag = function(direction) {
+    var chosenTag = this.tagCanvases[direction].tag;
+    this.log(chosenTag);
     if (this.untaggedInARow === 0) {
-      var chosenTag = this.tagCanvases[direction].tag;
       if (this.currentFlickrPicture.tags.indexOf(chosenTag) !== -1) {
         this.positiveTagging();
       }
@@ -679,6 +685,21 @@
   };
   GameScene.prototype.reinit = function() {
     this.nextScene = this;
+  };
+  GameScene.prototype.log = function(tag) {
+    var log = {
+      game_id: this.uuid,
+      timestamp: this.currentFlickrPicture.timestamp,
+      action_timestamp: this.p5.millis(),
+      flickrid: this.currentFlickrPicture.id,
+      assigned_tag: tag,
+      speed: 0,
+      level: 0,
+      row: this.row,
+      tags: this.currentFlickrPicture.tags,
+    };
+    console.log(log);
+    _LTracker.push(log);
   };
 
   function PaletteScene(p) {
