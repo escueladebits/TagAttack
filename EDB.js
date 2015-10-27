@@ -72,12 +72,20 @@ var EDB = (function() {
     };
     this.depth = 0;
     this.scale = 1;
+
+    this.visible = true;
   }
   p5Element.prototype.update = function() {
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
   };
   p5Element.prototype.draw = function(p5) {};
+  p5Element.prototype.hide = function() {
+    this.visible = false;
+  };
+  p5Element.prototype.show = function() {
+    this.visible = true;
+  };
 
   function p5Sprite() {
     p5Element.call(this);
@@ -88,7 +96,7 @@ var EDB = (function() {
   }
   p5Sprite.prototype = Object.create(p5Element.prototype);
   p5Sprite.prototype.draw = function(p5) {
-    if (this.img !== null) {
+    if (this.img !== null && this.visible) {
       var w = this.img.width * this.scale,
           h = this.img.height * this.scale;
       EDB.p5drawImage(

@@ -29,10 +29,6 @@
     {tag: 'cycling', index: 12, lum: 2,},
   ];
 
-  var selectedTags = _.sortBy(tags, function() { return Math.random();}).slice(0,4);
-  selectedTags = _.sortBy(selectedTags, function(t) { return 1 / t.tag.length;});
-  var usedTags = [];
-
   function LibrarianSprite(x, y) {
     var librarian = this;
     this.x = x;
@@ -55,7 +51,7 @@
     this.loaded = false;
     this.loading = false;
 
-    this.init = function() {
+    this.init = function(speed) {
       var yuriImg = this.yuriSprite.img;
       var pictureImg = this.picture.img;
       var position = {
@@ -65,21 +61,22 @@
       this.yuriSprite.position = position;
       this.picture.position.x = position.x;
       this.picture.position.y = position.y - yuriImg.height * .5 * this.yuriSprite.scale - pictureImg.height * .5 * this.picture.scale + 10 * this.picture.scale;
-      this.setVelocity(-8);
+      this.setVelocity(speed);
+      this.show();
     };
-    this.setPicture = function(picturePath) {
+    this.setPicture = function(picturePath, speed) {
       var librarian = this;
       if (!this.loading) {
         this.loading = true;
         var promisePicture = EDB.loadEDBImage(picturePath);
         if (this.picture.img !== null) {
-          this.init();
+          this.hide();
           this.pause();
         }
         return Promise.all([promiseAnimation, promisePicture]).then(function(results) {
           librarian.picture.img = results[1];
           librarian.loading = false;
-          librarian.init();
+          librarian.init(speed);
         });
       }
       else {
@@ -94,7 +91,7 @@
         height: height,
       };
       return promiseAnimation.then(function() {
-        librarian.init();
+        librarian.init(-8);
       });
     };
   }
@@ -103,6 +100,14 @@
       x: v,
       y: 0,
     }
+  };
+  LibrarianSprite.prototype.hide = function() {
+    this.yuriSprite.hide();
+    this.picture.hide();
+  };
+  LibrarianSprite.prototype.show = function() {
+    this.yuriSprite.show();
+    this.picture.show();
   };
   LibrarianSprite.prototype.getVelocity = function() {
     return this.yuriSprite.velocity.x;
@@ -153,6 +158,8 @@
   IntroScene.prototype.start = function() {
     EDB.Scene.prototype.start.call(this);
     this.gameScene = new GameScene(this.p5);
+    this.levelsScene = new SelectLevelScene(this.p5);
+    this.levelsScene.gameScene = this.gameScene;
 
     var intro = this;
     this.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(this.p5);
@@ -217,9 +224,8 @@
       var yuri = this.yuri;
       var intro = this;
       var path = this.flickrFeeder.getUntagged().path();
-      this.yuri.setPicture(path).then(function() {
+      this.yuri.setPicture(path, -2).then(function() {
         if (!yuri.loaded) {
-          yuri.setVelocity(-2);
           yuri.addElements(intro);
         }
       });
@@ -234,9 +240,9 @@
   IntroScene.prototype.stop = function() {
     EDB.Scene.prototype.stop.call(this);
     this.introMusic.stop();
-    this.nextScene = this.gameScene;
+    this.nextScene = this.levelsScene;
     this.nextScene.resourceManager = this.resourceManager;
-    this.nextScene.flickrFeeder = this.flickrFeeder;
+    this.gameScene.flickrFeeder = this.flickrFeeder;
   };
   IntroScene.prototype.keyPressed = function(k) {
     if (this.p5.key == 'z' || this.p5.key == 'Z') {
@@ -253,6 +259,110 @@
   IntroScene.prototype.reinit = function() {
     this.nextScene = this;
   };
+
+  var SelectLevelScene = function(p) {
+    EDB.Scene.call(this, p, 800, 600)
+    this.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(p);
+    this.textColor = (new EDB.NESPalette.ColorCreator(0, 0)).p5color(p);
+    this.selectedColor = (new EDB.NESPalette.ColorCreator(4, 1)).p5color(p);
+
+    this.nextScene = this;
+    this.levels = [
+      {
+        name: 'Level 1',
+        speed: 4,
+        tags: ['portrait', 'people', 'architecture', 'map',],
+        taglines: [
+          'First steps',
+          'Use only common tags',
+          'Low speed',
+          'Learn the basics',
+        ],
+      },
+      {
+        name: 'Level 2',
+        speed: 6,
+        tags: ['portrait', 'people', 'architecture', 'map', 'flora', 'fauna',],
+        taglines: [
+          'Become a professional',
+          'Use common and uncommon tags',
+          'Medium speed',
+          'Tag as many as you can',
+        ],
+      },
+      {
+        name: 'Level 3',
+        speed: 9,
+        tags: ['portrait', 'people', 'architecture', 'map', 'flora', 'fauna', 'heraldry', 'music', 'cycling'],
+        taglines: [
+          'High speed',
+          'Domain rare & arcane tags',
+          'Become a master librarian',
+        ],
+      },
+    ];
+    this.selectedLevel = -1;
+  }
+  SelectLevelScene.resources = [
+    {'type': 'font', 'name': 'arcadeFont', 'path': 'data/04B_03__.TTF'},
+    {'type': 'sound', 'name': 'dismissSound', 'path': 'data/Jump6.wav'},
+    {'type': 'sound', 'name': 'simpleBell', 'path': 'data/Pickup_Coin14.wav'},
+  ];
+  SelectLevelScene.prototype = Object.create(EDB.Scene.prototype);
+  SelectLevelScene.prototype.resourcesList = function() {
+    return SelectLevelScene.resources;
+  };
+  SelectLevelScene.prototype.stop = function() {
+    this.nextScene = this.gameScene;
+    this.nextScene.resourceManager = this.resourceManager;
+    this.nextScene.level = this.levels[this.selectedLevel];
+  };
+  SelectLevelScene.prototype.draw = function() {
+    if (this.arcadeFont !== undefined) {
+      EDB.Scene.prototype.draw.call(this);
+      this.p5.textFont(this.arcadeFont);
+      this.p5.textSize(48);
+      for (var i = 0; i < this.levels.length; i++) {
+        var third = this.p5.width * .33;
+        var x = (i+1) * third - this.p5.textWidth(this.levels[i].name) * 1.3;
+        this.p5.fill(this.textColor);
+        if (i === this.selectedLevel) {
+          this.p5.fill(this.selectedColor);
+        }
+        this.p5.text(this.levels[i].name, x, this.p5.height *.3);
+      }
+
+      if (this.selectedLevel !== -1) {
+        this.p5.fill(this.textColor);
+        this.p5.textSize(32);
+        var levelFeatures = _.map(this.levels[this.selectedLevel].taglines, function(l) { return '- ' + l;}).join('\n\n');
+        this.p5.text(levelFeatures, this.p5.width * .20, this.p5.height * .5);
+      }
+    }
+  };
+  SelectLevelScene.prototype.keyPressed = function() {
+    if (this.p5.keyCode == this.p5.LEFT_ARROW) {
+      this.selectedLevel--;
+      this.dismissSound.play();
+    }
+    else if (this.p5.keyCode === this.p5.RIGHT_ARROW) {
+      this.selectedLevel++;
+      this.dismissSound.play();
+    }
+    if (this.selectedLevel < 0) {
+      this.selectedLevel = this.levels.length - 1;
+    }
+    else if (this.selectedLevel === this.levels.length) {
+      this.selectedLevel = 0;
+    }
+    if (this.p5.key === 'z' || this.p5.key === 'Z') {
+      if (this.selectedLevel !== -1) {
+        this.simpleBell.play();
+        this.stop();
+      }
+    }
+    return false;
+  }
 
   var GameScene = function(p) {
     EDB.Scene.call(this, p, 800, 600);
@@ -272,7 +382,6 @@
     };
 
     this.uuid = EDB.uuid();
-    console.log(this.uuid);
   };
   GameScene.prototype = Object.create(EDB.Scene.prototype);
   GameScene.resources = [
@@ -292,6 +401,13 @@
     this.gameoverScene.resourceManager = this.resourceManager;
 
     var game = this;
+
+    this.availableTags = _.filter(tags, function(t) { return game.level.tags.indexOf(t.tag) !== -1;});
+    var numberTags = this.availableTags.length > 4 ? 4 : 2;
+    this.selectedTags = _.sortBy(this.availableTags, function() { return Math.random();}).slice(0, numberTags);
+    this.selectedTags = _.sortBy(this.selectedTags, function(t) { return 1 / t.tag.length;});
+    this.usedTags = [];
+
     game.backgroundColor = (new EDB.NESPalette.ColorCreator(6, 3)).p5color(game.p5);
     game.p5.noSmooth();
     game.p5.frameRate(24);
@@ -474,9 +590,10 @@
     };
 
     game.tagCanvases = [];
-     _.each(game.arrows, function(direction, i) {
-      var color = new EDB.NESPalette.ColorCreator(selectedTags[i].index, selectedTags[i].lum);
-      game.tagCanvases[direction] = new (TagCanvasCreator(direction))(selectedTags[i].tag, color, game.arcadeFont);
+    this.availableCanvases = this.availableTags.length > 4 ? game.arrows : [this.p5.UP_ARROW, this.p5.DOWN_ARROW];
+    _.each(this.availableCanvases, function(direction, i) {
+      var color = new EDB.NESPalette.ColorCreator(game.selectedTags[i].index, game.selectedTags[i].lum);
+      game.tagCanvases[direction] = new (TagCanvasCreator(direction))(game.selectedTags[i].tag, color, game.arcadeFont);
       game.tagCanvases[direction].addElement();
     });
 
@@ -487,20 +604,20 @@
   };
   GameScene.prototype.substituteCanvas = function(direction) {
     var game = this;
-    if (selectedTags.length + usedTags.length === tags.length) {
-      usedTags = [];
+    if (this.selectedTags.length + this.usedTags.length === this.availableTags.length) {
+      this.usedTags = [];
     }
 
-    var oldTag = _.find(selectedTags, function(tc) {
+    var oldTag = _.find(this.selectedTags, function(tc) {
       return tc.tag == game.tagCanvases[direction].tag;
     });
-    usedTags.push(oldTag);
-    var oldIndex = selectedTags.indexOf(oldTag);
-    selectedTags.splice(oldIndex, 1);
-    var newTag = _.sample(_.filter(tags, function(tc) {
-      return selectedTags.indexOf(tc) === -1 && usedTags.indexOf(tc) === -1;
+    this.usedTags.push(oldTag);
+    var oldIndex = this.selectedTags.indexOf(oldTag);
+    this.selectedTags.splice(oldIndex, 1);
+    var newTag = _.sample(_.filter(this.availableTags, function(tc) {
+      return game.selectedTags.indexOf(tc) === -1 && game.usedTags.indexOf(tc) === -1;
     }));
-    selectedTags.push(newTag);
+    this.selectedTags.push(newTag);
 
     this.successBell.play();
 
@@ -519,7 +636,7 @@
     if (!this.librarian.loaded && this.flickrFeeder.available()) {
       var librarian = this.librarian;
       var path = this.getNextImage();
-      this.librarian.setPicture(path).then(function() {
+      this.librarian.setPicture(path, -this.level.speed).then(function() {
         if (!librarian.loaded) {
           librarian.addElements(game);
         }
@@ -532,7 +649,7 @@
     if (this.secs >= this.music.duration() * .99) {
       this.stop();
     }
-    _.each(this.arrows, function(arrow) {
+    _.each(this.availableCanvases, function(arrow) {
       if (game.tagCanvases[arrow].full()) {
         game.substituteCanvas(arrow);
       }
@@ -581,14 +698,14 @@
     this.log('dismissed');
     this.closeRow();
     if (this.untaggedInARow === 0) {
-      if (_.intersection(_.map(selectedTags, 'tag'), this.currentFlickrPicture.tags).length === 0) {
+      if (_.intersection(_.map(game.selectedTags, 'tag'), this.currentFlickrPicture.tags).length === 0) {
         this.positiveTagging();
       }
       else {
         this.negativeTagging();
       }
     }
-    this.librarian.setPicture(this.getNextImage());
+    this.librarian.setPicture(this.getNextImage(), -this.level.speed);
     this.usedImages++;
     this.dismissedInARow++;
     this.dismissSound.play();
@@ -625,7 +742,7 @@
     }
     this.simpleBell.play();
     var picture = this.librarian.getPicture();
-    this.librarian.setPicture(this.getNextImage());
+    this.librarian.setPicture(this.getNextImage(), -this.level.speed);
     this.tagCanvases[direction].highlight();
     this.tagCanvases[direction].addPicture(picture);
     this.dismissedInARow = 0;
@@ -855,7 +972,7 @@
     return this.nextScene;
   };
 
-  var game = EDB.createp5Game([IntroScene, GameScene, GameOverScene], 0);
+  var game = EDB.createp5Game([IntroScene, SelectLevelScene, GameScene, GameOverScene], 0);
   //var game = EDB.createp5Game([PaletteScene]);
   var myp5 = new p5(game);
 })();
