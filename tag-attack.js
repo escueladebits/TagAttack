@@ -322,6 +322,7 @@
       EDB.Scene.prototype.draw.call(this);
       this.p5.textFont(this.arcadeFont);
       this.p5.textSize(48);
+      this.p5.noStroke();
       for (var i = 0; i < this.levels.length; i++) {
         var third = this.p5.width * .33;
         var x = (i+1) * third - this.p5.textWidth(this.levels[i].name) * 1.3;
