@@ -149,7 +149,7 @@
   IntroScene.prototype = Object.create(EDB.Scene.prototype);
 
   IntroScene.resources = [
-    {'type': 'sound', 'name': 'introMusic', 'path': 'data/Ozzed_-_Satisfucktion.mp3'},
+    {'type': 'sound', 'name': 'introMusic', 'path': 'data/Ozzed_-_Satisfucktion.ogg'},
     {'type': 'font', 'name': 'arcadeFont', 'path': 'data/04B_03__.TTF'},
   ];
   IntroScene.prototype.resourcesList = function() {
@@ -386,7 +386,7 @@
   };
   GameScene.prototype = Object.create(EDB.Scene.prototype);
   GameScene.resources = [
-    {'type': 'sound', 'name': 'music', 'path': 'data/Ozzed_-_8-bit_Party.mp3'},
+    {'type': 'sound', 'name': 'music', 'path': 'data/Ozzed_-_8-bit_Party.ogg'},
     {'type': 'sound', 'name': 'simpleBell', 'path': 'data/Pickup_Coin14.wav'},
     {'type': 'sound', 'name': 'successBell', 'path': 'data/Randomize7.wav'},
     {'type': 'font', 'name': 'arcadeFont', 'path': 'data/04B_03__.TTF'},
@@ -872,7 +872,7 @@
   GameOverScene.prototype = Object.create(EDB.Scene.prototype);
   GameOverScene.resources = [
     {'type': 'font', 'name': 'arcadeFont', 'path': 'data/04B_03__.TTF'},
-    {'type': 'sound', 'name': 'gameoverMusic', 'path': 'data/Ozzed_-_Termosdynamik.mp3'},
+    {'type': 'sound', 'name': 'gameoverMusic', 'path': 'data/Ozzed_-_Termosdynamik.ogg'},
   ];
   GameOverScene.prototype.resourcesList = function() {
     return GameOverScene.resources;
