@@ -174,7 +174,7 @@
         p5.noStroke();
         p5.textFont(intro.arcadeFont);
         p5.textSize(125);
-        p5.text("Tag Attack", p5.width * .10, p5.height * .283);
+        //p5.text("Tag Attack", p5.width * .10, p5.height * .283);
       }
     };
     title.depth = 100;
@@ -189,8 +189,8 @@
         p5.textSize(20);
         p5.noStroke();
         var footer = "Copyright 2015 Escuela de Bits, GPL Licensed";
-        p5.text(footer, p5.width * .40, p5.height * .97);
-        p5.text('Music by @OzzedNet', p5.width * .01, p5.height * .97);
+        //p5.text(footer, p5.width * .40, p5.height * .97);
+        //p5.text('Music by @OzzedNet', p5.width * .01, p5.height * .97);
       }
     };
     this.addElement(footer);
@@ -204,7 +204,7 @@
         var y = p5.height * .47;
         p5.textFont(intro.arcadeFont);
         p5.textSize(40);
-        p5.text("Press <START>", x, y);
+        //p5.text("Press <START>", x, y);
       }
     };
     callToAction.depth = 100;
@@ -330,14 +330,14 @@
         if (i === this.selectedLevel) {
           this.p5.fill(this.selectedColor);
         }
-        this.p5.text(this.levels[i].name, x, this.p5.height *.3);
+      //  this.//p5.text(this.levels[i].name, x, this.p5.height *.3);
       }
 
       if (this.selectedLevel !== -1) {
         this.p5.fill(this.textColor);
         this.p5.textSize(32);
         var levelFeatures = _.map(this.levels[this.selectedLevel].taglines, function(l) { return '- ' + l;}).join('\n\n');
-        this.p5.text(levelFeatures, this.p5.width * .20, this.p5.height * .5);
+    //    this.//p5.text(levelFeatures, this.p5.width * .20, this.p5.height * .5);
       }
     }
   };
@@ -484,7 +484,7 @@
       p5.strokeWeight(2);
       p5.stroke(20);
       p5.fill(this.backgroundColor.copy().lighter().p5color(p5));
-      p5.text(this.tag.slice(0, this.maxText), this.textX, this.textY);
+      //p5.text(this.tag.slice(0, this.maxText), this.textX, this.textY);
     };
     TagCanvasElement.prototype.highlight = function() {
       var tagcanvas = this;
@@ -902,30 +902,30 @@
       p5.noStroke();
       p5.textFont(gameover.arcadeFont);
       p5.textSize(72);
-      p5.text(msg, this.position.x - p5.textWidth(msg) * .5, this.position.y - this.height * .35);
+      //p5.text(msg, this.position.x - p5.textWidth(msg) * .5, this.position.y - this.height * .35);
 
       var leftMargin = this.position.x - this.width * .4;
       var baseScore = gameover.score.picturesTagged * 9;
       fullCanvases1 = 'Tagged items: ' + gameover.score.picturesTagged;
       fullCanvases2 =  gameover.score.picturesTagged + ' x 9 = ' + baseScore;
       p5.textSize(32);
-      p5.text(fullCanvases1 + "\n" + fullCanvases2, leftMargin, this.position.y - this.height * .25);
+      //p5.text(fullCanvases1 + "\n" + fullCanvases2, leftMargin, this.position.y - this.height * .25);
 
       var penalization = gameover.score.mistakes * 3;
       warnings = 'Warnings: ' + gameover.score.mistakes +'\n' + gameover.score.mistakes + ' x -3 = -' + penalization;
-      p5.text(warnings, leftMargin, this.position.y - this.height * .07);
+      //p5.text(warnings, leftMargin, this.position.y - this.height * .07);
 
       var bonus = _.reduce(gameover.score.in_a_row, function(memo, value, index) {
         return value !== undefined ? memo + value * index: memo;
       }, 0);
       var bonusScore = bonus * 7;
       items = 'Bonus: bonus\n' + bonus + ' x 7 = ' + bonusScore;
-      p5.text(items, leftMargin, this.position.y + this.height * .1);
+      //p5.text(items, leftMargin, this.position.y + this.height * .1);
 
       score = baseScore + bonusScore - penalization;
       total = 'Total: \n' + baseScore + ' + ' + bonusScore + ' - ' + penalization + ' = ' + score;
       p5.textSize(45);
-      p5.text(total, leftMargin, this.position.y + this.height * .35);
+      //p5.text(total, leftMargin, this.position.y + this.height * .35);
     };
 
     this.yuri = new LibrarianSprite(this.p5.width, this.p5.height * .9);
