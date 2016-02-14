@@ -1,0 +1,3 @@
+[submodule "lib/memoizoyles"]
+	path = lib/memoizoyles
+	url = http://github.com/ajspadial/memoizoyles.git
