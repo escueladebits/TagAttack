@@ -4,7 +4,7 @@
   See License info at the end of the file.
 */
 
-SoundFile introMusic;
+AudioPlayer introMusic;
 
 class IntroScene extends Scene {
 
@@ -31,7 +31,7 @@ class IntroScene extends Scene {
 
   private void loadItems() {
     arcadeFont = loadFont("04b03-48.vlw");
-    introMusic = new SoundFile(app, "Ozzed_-_Satisfucktion.mp3");
+    introMusic = app.minim.loadFile("Ozzed_-_Satisfucktion.mp3");
   }
 
   private void startScene() {
@@ -48,7 +48,7 @@ class IntroScene extends Scene {
   }
 
   void stop() {
-   introMusic.stop();
+   introMusic.pause();
   };
 
   Scene update() {
@@ -59,7 +59,7 @@ class IntroScene extends Scene {
     }
     else {
       exit = false;
-      introMusic.stop();
+      introMusic.pause();
       return otherScene;
     }
   }

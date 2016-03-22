@@ -1,4 +1,4 @@
-import processing.sound.*;
+import ddf.minim.*;
 
 /*
   Copyright 2015 Antonio Jesús Sánchez Padial
@@ -21,9 +21,14 @@ Scene currentScene, introScene, gameScene, tunningScene;
 
 LuminancePalette palette;
 
+Minim minim;
+
 void setup() {
   size(800, 600);
   noSmooth();
+
+  minim = new Minim(this);
+
   palette = new LuminancePalette(LuminancePalette.NES);
   gameScene = new GameScene(this, palette);
   introScene = new IntroScene(this, palette);
