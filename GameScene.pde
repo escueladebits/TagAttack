@@ -8,7 +8,7 @@ class GameScene extends Scene {
   
   Sprite img;
   TagCanvas[] canvases;
-  SoundFile music;
+  AudioPlayer music;
   
   LibrarianSprite lib;
   LuminanceColor backgroundColor;
@@ -38,7 +38,7 @@ class GameScene extends Scene {
   
   void start() {
     if (!pause) {
-      music = new SoundFile(app, "Ozzed_-_8-bit_Party.mp3");
+      music = app.minim.loadFile("Ozzed_-_8-bit_Party.mp3");
       music.play();
       
       lib = new LibrarianSprite("yurifox.png", width, height);
@@ -50,7 +50,7 @@ class GameScene extends Scene {
   }
 
   void stop() {
-    music.stop();
+    music.pause();
   }
   
   void pause() {
