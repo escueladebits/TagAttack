@@ -102,7 +102,9 @@ class IntroScene extends Scene {
   }
 
   void keyPressed() {
-    exit = true;
+    if (key == 'z' || key == 'Z') {
+      exit = true;
+    }
   }
 }
 
