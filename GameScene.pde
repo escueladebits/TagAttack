@@ -73,12 +73,41 @@ class GameScene extends Scene {
     }  
   }
   
-  void keyPressed() {    
-    
-    canvases[0].addImage(img);
+  void newImage() {
     img = new Sprite("10997290916_57a15cf58d_q.jpg");
     setPicture();
-    
+  }
+  
+  void keyReleased() {
+    selectedCanvas = null;
+  }
+
+  TagCanvas selectedCanvas;
+  
+  void keyPressed() {    
+    if (key == CODED) {
+      switch(keyCode) {
+        case UP:
+          selectedCanvas = canvases[0];
+          break;
+        case DOWN:
+          selectedCanvas = canvases[1];
+          break;
+        case LEFT:
+          selectedCanvas = canvases[2];
+          break;
+        case RIGHT:
+          selectedCanvas = canvases[3];
+          break;  
+      }
+      selectedCanvas.addImage(img);
+      newImage();
+    }
+    else {
+      if (key == 'z' || key == 'Z') {
+        newImage();
+      }
+    }
   }
   
   
