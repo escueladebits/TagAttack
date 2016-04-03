@@ -93,7 +93,7 @@ class TagCanvas {
   
   void addImage(Sprite img) {
     Sprite spr = img.copy();    
-    spr.scale = .8;
+    spr.scale = .7;
     int i = minis.size();
     spr.x = 0.05 * wide + this.x + i * this.deltaX;
     spr.y = 0.05 * wide + this.y + i * this.deltaY;
