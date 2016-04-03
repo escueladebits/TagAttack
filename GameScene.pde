@@ -17,7 +17,7 @@ class GameScene extends Scene {
     super(app, palette);
     img = new Sprite("10997265356_0f8e16452f_q.jpg");
     PFont arcadeFont = loadFont("04b03-48.vlw");
-    float wide = .17 * width;
+    float wide = .15 * width;
 
     backgroundColor = palette.createColor(6, 3);
     setPicture();
