@@ -35,6 +35,12 @@ void setup() {
   tunningScene = new PaletteScene(this, palette);
   introScene.start(gameScene);
   currentScene = introScene;  
+  
+  FlickrFeeder feeder = new FlickrFeeder(
+    "588ed2f326df81d5a7382e1bf64da098",
+    "12403504%40N02",
+    new String[1]);
+    
 }
 
 void draw() {
