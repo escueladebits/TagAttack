@@ -9,6 +9,9 @@ class GameScene extends Scene {
   Sprite img;
   TagCanvas[] canvases;
   AudioPlayer music;
+  Clock clock;
+  float secs, time0;
+  float wide;
   
   LibrarianSprite lib;
   LuminanceColor backgroundColor;
@@ -17,7 +20,8 @@ class GameScene extends Scene {
     super(app, palette);
     img = new Sprite("10997265356_0f8e16452f_q.jpg");
     PFont arcadeFont = loadFont("04b03-48.vlw");
-    float wide = .15 * width;
+    wide = .15 * width;
+    time0 = millis();
 
     backgroundColor = palette.createColor(6, 3);
     setPicture();
@@ -41,6 +45,8 @@ class GameScene extends Scene {
       music = app.minim.loadFile("Ozzed_-_8-bit_Party.mp3");
       music.play();
       
+      clock = new Clock(music, wide + 2, wide + 10, width - wide * 2 - 4);
+      
       lib = new LibrarianSprite("yurifox.png", width, height);
       lib.setY(width * .47);
       lib.setupPicture("10997265356_0f8e16452f_q.jpg", 1.5);
@@ -62,7 +68,9 @@ class GameScene extends Scene {
     for (int i = 0; i < canvases.length; i++) {
       canvases[i].update();
     }
-    return this;
+    secs = (millis() - time0) / 1000;
+    Scene nextScene = music.position() < music.length() ? this : new IntroScene(app, palette);
+    return nextScene;
   }
   
   void draw() {
@@ -71,6 +79,7 @@ class GameScene extends Scene {
     for (int i = 0; i < canvases.length; i++) {
       canvases[i].draw();
     }  
+    clock.draw(secs);
   }
   
   void newImage() {
