@@ -1,12 +1,11 @@
 class FlickrPhoto
 {
-  public String flickrid;
-  public String url;
-  public String tag;
-  public String largeSquare;
-  public String small;
-  public String medium;
-  public String large;
+  private String id;  
+  private String owner;
+  private String server;
+  private int farm;
+  private String secret;
+  private String tags;
   
   public boolean ready;
   public PImage image;
@@ -14,27 +13,30 @@ class FlickrPhoto
   
   private boolean local;
   
-  public FlickrPhoto(String csv, boolean local)
+  public FlickrPhoto(JSONObject json, boolean local) 
   {
-    ready = false;
-    image = null;
-    downloading = false;
+    init();
     
-    String[] data = split(csv, ',');
-    flickrid = data[0];
-    url = data[1];
-    tag = data[2];
-    largeSquare = data[3];
-    small = data[4];
-    medium = data[5];
-    large = data[6];    
+    id = json.getString("id");
+    tags = json.getString("tags");
+    owner = json.getString("owner");
+    server = json.getString("server");
+    farm = json.getInt("farm");
+    secret = json.getString("secret");
     
     this.local = local;
   }
   
-  public String path()
-  {
-    return  this.local ? "data/repo_all/" + this.flickrid + ".jpg" : this.small;
+  private void init() {
+    ready = false;
+    image = null;
+    downloading = false;
+  }
+
+  public String path() {
+    String url = "https://farm" + this.farm + ".staticflickr.com/" + this.server;
+    url += "/" + this.id + "_" + this.secret + "_m.jpg";
+    return url;
   }
   
 }

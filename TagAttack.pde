@@ -23,6 +23,19 @@ LuminancePalette palette;
 
 Minim minim;
 
+String[] tags = {
+  "portrait",
+  "map",
+  "diagram",
+  "people",
+  "heraldry",
+  "architecture",
+  "music",
+  "fauna",
+  "flora",
+  "cycling",
+};
+
 void setup() {
   size(800, 600);
   noSmooth();
@@ -39,7 +52,8 @@ void setup() {
   FlickrFeeder feeder = new FlickrFeeder(
     "588ed2f326df81d5a7382e1bf64da098",
     "12403504%40N02",
-    new String[1]);
+    tags
+    );
     
 }
 
