@@ -23,6 +23,8 @@ LuminancePalette palette;
 
 Minim minim;
 
+FlickrFeeder feeder;
+
 String[] tags = {
   "portrait",
   "map",
@@ -49,7 +51,7 @@ void setup() {
   introScene.start(gameScene);
   currentScene = introScene;  
   
-  FlickrFeeder feeder = new FlickrFeeder(
+  feeder = new FlickrFeeder(
     "588ed2f326df81d5a7382e1bf64da098",
     "12403504%40N02",
     tags
